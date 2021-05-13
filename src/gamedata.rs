@@ -150,8 +150,8 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
     let ev20 = game.end.v2_0.as_ref().unwrap();
 
     if ev20.lras_initiator != None {
-        let asdf = ev20.lras_initiator.unwrap();
-        match asdf {
+        let port = ev20.lras_initiator.unwrap();
+        match port {
             Port::P1 => {
                 return Ok(MatchResult::EarlyEnd(1));
             }
