@@ -193,6 +193,37 @@ fn num_to_char(char_num: usize) -> String{
 }
 
 fn num_to_stage(stage_num: usize) -> String{
-
-    String::from("adfasdf")
+    match stage_num {
+        2 => String::from("Fountain of Dreams"),
+        3 => String::from("Pokémon Stadium"),
+        4 => String::from("Princess Peach's Castle"),
+        5 => String::from("Kongo Jungle"),
+        6 => String::from("Brinstar"),
+        7 => String::from("Corneria"),
+        8 => String::from("Yoshi's Story"),
+        9 => String::from("Onett"),
+        10 => String::from("Mute City"),
+        11 => String::from("Raianbow Cruise"),
+        12 => String::from("Jungle Japes"),
+        13 => String::from("Great Bay"),
+        14 => String::from("Hyrule Temple"),
+        15 => String::from("Brinstar Depths"),
+        16 => String::from("Yoshi's Island"),
+        17 => String::from("Green Greens"),
+        18 => String::from("Fourside"),
+        19 => String::from("Mushroom Kingdom I"),
+        20 => String::from("Mushroom Kingdom II"),
+        22 => String::from("Venom"),
+        23 => String::from("Poké Floats"),
+        24 => String::from("Big Blue"),
+        25 => String::from("Icicle Mountain"),
+        26 => String::from("Icetop"),//?
+        27 => String::from("Flat Zone"),
+        28 => String::from("Dream Land N64"),
+        29 => String::from("Yoshi's Island N64"),
+        30 => String::from("Kongo Jungle N64"),
+        31 => String::from("Battlefield"),
+        32 => String::from("Final Destination"),
+        _ => unreachable!()//any other value is errored out before this fn is ever called
+    }
 }
