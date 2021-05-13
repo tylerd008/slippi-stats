@@ -44,6 +44,10 @@ impl GameResults{
             results: Vec::new()
         }
     }
+
+    pub fn add_game(&mut self, game: GameResult) {
+        self.results.push(game);
+    }
 }
 
 impl GameResult{
@@ -103,8 +107,8 @@ impl fmt::Display for MatchResult{
 impl fmt::Display for MatchEndType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
         match self {
-            Stocks => write!(f, "stocks"),
-            Timeout => write!(f, "timeout"),
+            MatchEndType::Stocks => write!(f, "stocks"),
+            MatchEndType::Timeout => write!(f, "timeout"),
         }
     }
 }
@@ -125,7 +129,7 @@ fn get_player_num(game: &Game) -> Option<usize>{//rewrite this to return player 
 	}
 }
 
-fn get_match_result(data: &Vec<Frame2>, player_num: usize) -> MatchResult{
+fn get_match_result(data: &Vec<Frame2>, player_num: usize) -> MatchResult{//maybe redo this getting the game end data from the metadata to account for LRAStart
 	let pp_lf = &data[data.len()-1].ports[player_num];//player port last frame
 
 	let op_lf = &data[data.len()-1].ports[1 - player_num];//opponent player last frame
@@ -138,8 +142,8 @@ fn get_match_result(data: &Vec<Frame2>, player_num: usize) -> MatchResult{
 	} else if p_end_stocks < o_end_stocks {
 		MatchResult::Loss(MatchEndType::Stocks)
 	} else {
-		if pp_lf.leader.post.damage < op_lf.leader.post.damage {
-            MatchResult::Victory(MatchEndType::Timeout)
+		if pp_lf.leader.post.damage < op_lf.leader.post.damage {//i don't think ties even need to be considered since timeouts are rare enough and having the same percent to however many decimal places the game stores percent to is effectively impossible
+            MatchResult::Victory(MatchEndType::Timeout)         //the one issue is games that are aborted instantly
 	    } else {
             MatchResult::Loss(MatchEndType::Timeout)
         }
