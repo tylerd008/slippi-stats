@@ -26,7 +26,7 @@ fn main() {
 		let result = match GameResult::parse_game(game) {
 			Ok(g) => g,
 			Err(e) => {
-				println!("ererere: {:?}", e);
+				println!("Error when parsing game result: {:?}", e);
 				continue;
 			}
 		};

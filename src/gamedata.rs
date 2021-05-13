@@ -1,7 +1,5 @@
 
-use peppi::game::Game;
-use peppi::game::Frames;
-use peppi::frame::Frame2;
+use peppi::game::{Game, Frames, Port};
 use std::fmt;
 #[derive(Debug)]
 pub struct GameResults{
@@ -20,7 +18,8 @@ pub struct GameResult{
 enum MatchResult{
     Victory(MatchEndType),
     Loss(MatchEndType),
-    EarlyEnd,
+    EarlyEnd(usize),
+    Tie,
 }
 
 #[derive(Debug)]
@@ -58,15 +57,12 @@ impl GameResult{
                 return Err(GameParseError::CorruptedPlayerData);
             }
         };
-
-        let frames = &game.frames;
-		let data = match frames {
-			Frames::P2(d) => d,
-			_ => {
-				return Err(GameParseError::IncorrectPlayerCount);
-			}
-		};
-        let match_result = get_match_result(&data, player_num);
+        let match_result = match get_match_result(&game, player_num){
+            Ok(game_res) => game_res,
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
         let player_char = get_char(&game, player_num)?;
         let opponent_char = get_char(&game, 1- player_num)?;
@@ -99,7 +95,8 @@ impl fmt::Display for MatchResult{
         match self {
             MatchResult::Victory(endtype) => write!(f, "Won by {}.", endtype),
             MatchResult::Loss(endtype) => write!(f, "Lost by {}.", endtype),
-            MatchResult::EarlyEnd => write!(f, "Match ended early."),
+            MatchResult::EarlyEnd(player_num) => write!(f, "Match ended early by player {}.", player_num),
+            MatchResult::Tie => write!(f, "Ended in a tie."),
         }
     }
 }
@@ -129,7 +126,15 @@ fn get_player_num(game: &Game) -> Option<usize>{//rewrite this to return player 
 	}
 }
 
-fn get_match_result(data: &Vec<Frame2>, player_num: usize) -> MatchResult{//maybe redo this getting the game end data from the metadata to account for LRAStart
+fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameParseError>{//maybe redo this getting the game end data from the metadata to account for LRAStart
+
+    let frames = &game.frames;
+    let data = match frames {
+        Frames::P2(d) => d,
+        _ => {
+            return Err(GameParseError::IncorrectPlayerCount);
+        }
+    };
 	let pp_lf = &data[data.len()-1].ports[player_num];//player port last frame
 
 	let op_lf = &data[data.len()-1].ports[1 - player_num];//opponent player last frame
@@ -137,15 +142,37 @@ fn get_match_result(data: &Vec<Frame2>, player_num: usize) -> MatchResult{//mayb
 	let p_end_stocks = pp_lf.leader.post.stocks;
 	let o_end_stocks = op_lf.leader.post.stocks;
 
+    let ev20 = game.end.v2_0.as_ref().unwrap();
+
+    if ev20.lras_initiator != None{
+        let asdf = ev20.lras_initiator.unwrap();
+            match asdf {
+                Port::P1 => {
+                    return Ok(MatchResult::EarlyEnd(1));
+                }
+                Port::P2 => {
+                    return Ok(MatchResult::EarlyEnd(2));
+                }
+                Port::P3 => {
+                    return Ok(MatchResult::EarlyEnd(3));
+                }
+                Port::P4 => {
+                    return Ok(MatchResult::EarlyEnd(4));
+            }
+        }
+    }
+
 	if p_end_stocks > o_end_stocks{
-		MatchResult::Victory(MatchEndType::Stocks)
+		Ok(MatchResult::Victory(MatchEndType::Stocks))
 	} else if p_end_stocks < o_end_stocks {
-		MatchResult::Loss(MatchEndType::Stocks)
+		Ok(MatchResult::Loss(MatchEndType::Stocks))
 	} else {
-		if pp_lf.leader.post.damage < op_lf.leader.post.damage {//i don't think ties even need to be considered since timeouts are rare enough and having the same percent to however many decimal places the game stores percent to is effectively impossible
-            MatchResult::Victory(MatchEndType::Timeout)         //the one issue is games that are aborted instantly
-	    } else {
-            MatchResult::Loss(MatchEndType::Timeout)
+		if pp_lf.leader.post.damage < op_lf.leader.post.damage {
+            Ok(MatchResult::Victory(MatchEndType::Timeout))     
+	    } else if pp_lf.leader.post.damage > op_lf.leader.post.damage {
+            Ok(MatchResult::Loss(MatchEndType::Timeout))
+        } else {
+            Ok(MatchResult::Tie)
         }
     }
 }
