@@ -1,0 +1,10 @@
+[package]
+name = "slippi_info"
+version = "0.1.0"
+authors = ["tylerd008 <77032854+tylerd008@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+peppi = { git = "https://github.com/hohav/peppi", branch = "const-generics" }
