@@ -1,8 +1,8 @@
+
 use peppi::game::Game;
 use peppi::game::Frames;
 use peppi::frame::Frame2;
 use std::fmt;
-
 #[derive(Debug)]
 pub struct GameResults{
     results: Vec<GameResult>
@@ -30,7 +30,7 @@ enum MatchEndType {
 }
 
 #[derive(Debug)]
-enum GameParseError{
+pub enum GameParseError{
     CorruptedCharData(usize),
     CorruptedStageData(usize),
     CorruptedPlayerData,
@@ -39,7 +39,7 @@ enum GameParseError{
 }
 
 impl GameResults{
-    fn new() -> Self{
+    pub fn new() -> Self{
         Self{
             results: Vec::new()
         }
@@ -47,7 +47,7 @@ impl GameResults{
 }
 
 impl GameResult{
-    fn parse_game(game: Game) -> Result<Self, GameParseError>{
+    pub fn parse_game(game: Game) -> Result<Self, GameParseError>{
         let player_num =  match get_player_num(&game){
             Some(num) => num,
             None => {

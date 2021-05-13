@@ -1,4 +1,8 @@
+//mod gamedata;
+
 mod gamedata;
+
+use gamedata::{GameResults, GameResult};
 
 use std::path::Path;
 use std::fs::File;
@@ -28,6 +32,8 @@ fn main() {
 	let mut tot_games: usize = 0;
 	let mut win_count: usize = 0;
 
+	let mut results = GameResults::new();
+
 	for entry in fs::read_dir(p).unwrap() {
 		let path = entry.unwrap().path();
 		let game = match peppi::game(&mut File::open(&path).unwrap(), Some(parse::Opts{skip_frames: false})){
@@ -37,7 +43,19 @@ fn main() {
 				continue;
 			}
 		};
-		let frames = &game.frames;
+
+		let gaaame = match GameResult::parse_game(game) {
+			Ok(g) => g,
+			Err(e) => {
+				println!("ererere: {:?}", e);
+				continue;
+			}
+		};
+
+		println!("{}", gaaame);
+
+
+		/* let frames = &game.frames;
 		let data = match frames {
 			Frames::P2(d) => d,
 			_ => {
@@ -68,9 +86,9 @@ fn main() {
 		tot_games += 1;
 		if tot_games % 50 == 0{
 			println!("processed game {}", tot_games);
-		}
+		} */
 	}
-	for i in 0..26 {
+	/* for i in 0..26 {
 		if char_vec[i] == 0{
 			continue;
 		}
@@ -84,7 +102,7 @@ fn main() {
 		println!("{}: {} games", stage_names[i], stage_count[i]);
 	}
 
-	println!("Won {} out of {} games", win_count, tot_games);
+	println!("Won {} out of {} games", win_count, tot_games); */
 }
 
 fn get_player_num(game: &Game) -> Option<usize>{//rewrite this to return player number, not the player struct
