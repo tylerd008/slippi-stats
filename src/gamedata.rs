@@ -2,10 +2,10 @@ use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs::File;
 
-use peppi::parse;
-use std::path::PathBuf;
-use peppi::ParseError;
 use peppi::metadata::Player as PlayerMD;
+use peppi::parse;
+use peppi::ParseError;
+use std::path::PathBuf;
 #[derive(Debug)]
 pub struct GameResults {
     results: Vec<GameResult>,
@@ -99,7 +99,7 @@ impl GameResult {
     pub fn has_player(path: &PathBuf, np_code: String) -> Result<bool, GameParseError> {
         let game = match peppi::game(
             &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames: true }),//skip frames so if game doesn't have player it just gets skipped over
+            Some(parse::Opts { skip_frames: true }), //skip frames so if game doesn't have player it just gets skipped over
         ) {
             Ok(val) => val,
             Err(e) => {
@@ -109,9 +109,9 @@ impl GameResult {
         let players = game.metadata.players.as_ref().unwrap();
         let p1_np_code = get_np_code(&players, 0)?;
         let p2_np_code = get_np_code(&players, 1)?;
-        
+
         Ok(p1_np_code == np_code || p2_np_code == np_code)
-        }
+    }
 }
 
 impl fmt::Display for GameResult {
@@ -238,7 +238,6 @@ fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GamePar
         None => Err(GameParseError::CorruptedPlayerData),
     }
 }
-
 
 fn num_to_char(char_num: usize) -> String {
     match char_num {

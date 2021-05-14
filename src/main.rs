@@ -20,7 +20,7 @@ fn main() {
 
     for entry in fs::read_dir(p).unwrap() {
         let path = entry.unwrap().path();
-        match GameResult::has_player(&path, np_code.to_string()){
+        match GameResult::has_player(&path, np_code.to_string()) {
             Ok(has_player) => {
                 if !has_player {
                     println!("Game does not contain player. Skipping.");
