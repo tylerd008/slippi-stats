@@ -53,6 +53,22 @@ impl GameResults {
     pub fn add_game(&mut self, game: GameResult) {
         self.results.push(game);
     }
+
+    pub fn win_percentage(&self) -> f64 {
+        let mut wins = 0;
+
+        for game in &self.results {
+            match &game.match_result {
+                MatchResult::Victory(_) => {
+                    wins += 1;
+                }
+                _ => {
+                    continue;
+                }
+            }
+        }
+        wins as f64 / self.results.len() as f64
+    }
 }
 
 impl GameResult {

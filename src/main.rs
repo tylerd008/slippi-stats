@@ -18,6 +18,8 @@ fn main() {
 
     let mut results = GameResults::new();
 
+    let mut count = 0;
+
     for entry in fs::read_dir(p).unwrap() {
         let path = entry.unwrap().path();
         match GameResult::has_player(&path, np_code.to_string()) {
@@ -41,7 +43,12 @@ fn main() {
             }
         };
 
-        println!("{}", &result);
+        //println!("{}", &result);
         results.add_game(result);
+        count += 1;
+        if count % 50 == 0 {
+            println!("Processed game number: {}", count);
+        }
     }
+    println!("win percent: {0:.2}", results.win_percentage() * 100.0);
 }
