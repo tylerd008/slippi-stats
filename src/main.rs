@@ -2,16 +2,13 @@ mod gamedata;
 
 use gamedata::{GameResult, GameResults};
 
-use std::fs::File;
-
-use peppi::parse;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 
 fn main() {
     if env::args().len() < 3 {
-        println!("Too few arguments");
+        println!("Too few arguments. First argument is your netplay code, second is the directory where your replays are stored.");
         return;
     }
 
@@ -23,18 +20,20 @@ fn main() {
 
     for entry in fs::read_dir(p).unwrap() {
         let path = entry.unwrap().path();
-        let game = match peppi::game(
-            &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames: false }),
-        ) {
-            Ok(val) => val,
+        match GameResult::has_player(&path, np_code.to_string()){
+            Ok(has_player) => {
+                if !has_player {
+                    println!("Game does not contain player. Skipping.");
+                    continue;
+                }
+            }
             Err(e) => {
                 println!("Error {:?}, when parsing game: {:?}", e, path);
                 continue;
             }
-        };
+        }
 
-        let result = match GameResult::parse_game(game, np_code.to_string()) {
+        let result = match GameResult::parse_game(path, np_code.to_string()) {
             Ok(g) => g,
             Err(e) => {
                 println!("Error when parsing game result: {:?}", e);

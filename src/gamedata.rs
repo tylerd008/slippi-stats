@@ -1,6 +1,11 @@
-use peppi::game::{Frames, Game, Player, Port};
-use peppi::metadata::Player as PlayerMD;
+use peppi::game::{Frames, Game, Port};
 use std::fmt;
+use std::fs::File;
+
+use peppi::parse;
+use std::path::PathBuf;
+use peppi::ParseError;
+use peppi::metadata::Player as PlayerMD;
 #[derive(Debug)]
 pub struct GameResults {
     results: Vec<GameResult>,
@@ -35,7 +40,7 @@ pub enum GameParseError {
     CorruptedPlayerData,
     EmptyCharData,
     IncorrectPlayerCount,
-    GameDoesNotContainPlayer, //not sure that this should be an error but i'm not sure how else to handle it right now
+    PeppiError(ParseError),
 }
 
 impl GameResults {
@@ -51,14 +56,20 @@ impl GameResults {
 }
 
 impl GameResult {
-    pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
-        let player_num = match get_player_num(&game, np_code) {
-            Ok(Some(num)) => num,
-            Ok(None) => {
-                return Err(GameParseError::CorruptedPlayerData);
-            }
+    pub fn parse_game(path: PathBuf, np_code: String) -> Result<Self, GameParseError> {
+        let game = match peppi::game(
+            &mut File::open(&path).unwrap(),
+            Some(parse::Opts { skip_frames: false }),
+        ) {
+            Ok(val) => val,
             Err(e) => {
-                return Err(e);
+                return Err(GameParseError::PeppiError(e));
+            }
+        };
+        let player_num = match get_player_num(&game, np_code) {
+            Some(num) => num,
+            None => {
+                return Err(GameParseError::CorruptedPlayerData);
             }
         };
         let match_result = match get_match_result(&game, player_num) {
@@ -84,6 +95,23 @@ impl GameResult {
             match_result,
         })
     }
+
+    pub fn has_player(path: &PathBuf, np_code: String) -> Result<bool, GameParseError> {
+        let game = match peppi::game(
+            &mut File::open(&path).unwrap(),
+            Some(parse::Opts { skip_frames: true }),//skip frames so if game doesn't have player it just gets skipped over
+        ) {
+            Ok(val) => val,
+            Err(e) => {
+                return Err(GameParseError::PeppiError(e));
+            }
+        };
+        let players = game.metadata.players.as_ref().unwrap();
+        let p1_np_code = get_np_code(&players, 0)?;
+        let p2_np_code = get_np_code(&players, 1)?;
+        
+        Ok(p1_np_code == np_code || p2_np_code == np_code)
+        }
 }
 
 impl fmt::Display for GameResult {
@@ -121,16 +149,19 @@ impl fmt::Display for MatchEndType {
     }
 }
 
-fn get_player_num(game: &Game, np_code: String) -> Result<Option<usize>, GameParseError> {
+fn get_player_num(game: &Game, np_code: String) -> Option<usize> {
     let players = game.metadata.players.as_ref().unwrap();
-    let p1_np_code = get_np_code(&players, 0)?;
-    let p2_np_code = get_np_code(&players, 1)?;
-    if p1_np_code == &np_code {
-        Ok(Some(0))
-    } else if p2_np_code == &np_code {
-        Ok(Some(1))
+    let p2_md = players.get(1).unwrap();
+    let p2_np_code = match &p2_md.netplay {
+        Some(c) => &c.code,
+        None => {
+            return None;
+        }
+    };
+    if p2_np_code == &np_code {
+        Some(1)
     } else {
-        Err(GameParseError::GameDoesNotContainPlayer)
+        Some(0)
     }
 }
 
@@ -152,8 +183,8 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
     let ev20 = game.end.v2_0.as_ref().unwrap();
 
     if ev20.lras_initiator != None {
-        let port = ev20.lras_initiator.unwrap();
-        match port {
+        let asdf = ev20.lras_initiator.unwrap();
+        match asdf {
             Port::P1 => {
                 return Ok(MatchResult::EarlyEnd(1));
             }
@@ -207,6 +238,7 @@ fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GamePar
         None => Err(GameParseError::CorruptedPlayerData),
     }
 }
+
 
 fn num_to_char(char_num: usize) -> String {
     match char_num {
