@@ -5,11 +5,19 @@ use gamedata::{GameResult, GameResults};
 use std::fs::File;
 
 use peppi::parse;
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
 fn main() {
-    let p = PathBuf::from("C:/Users/Flossy/Documents/Slippi");
+    if env::args().len() < 3 {
+        println!("Too few arguments");
+        return;
+    }
+
+    let args: Vec<String> = env::args().collect();
+    let np_code = args.get(1).unwrap();
+    let p = PathBuf::from(args.get(2).unwrap());
 
     let mut results = GameResults::new();
 
@@ -26,7 +34,7 @@ fn main() {
             }
         };
 
-        let result = match GameResult::parse_game(game) {
+        let result = match GameResult::parse_game(game, np_code.to_string()) {
             Ok(g) => g,
             Err(e) => {
                 println!("Error when parsing game result: {:?}", e);

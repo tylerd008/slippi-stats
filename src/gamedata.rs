@@ -1,4 +1,5 @@
-use peppi::game::{Frames, Game, Port};
+use peppi::game::{Frames, Game, Player, Port};
+use peppi::metadata::Player as PlayerMD;
 use std::fmt;
 #[derive(Debug)]
 pub struct GameResults {
@@ -34,6 +35,7 @@ pub enum GameParseError {
     CorruptedPlayerData,
     EmptyCharData,
     IncorrectPlayerCount,
+    GameDoesNotContainPlayer, //not sure that this should be an error but i'm not sure how else to handle it right now
 }
 
 impl GameResults {
@@ -49,11 +51,14 @@ impl GameResults {
 }
 
 impl GameResult {
-    pub fn parse_game(game: Game) -> Result<Self, GameParseError> {
-        let player_num = match get_player_num(&game) {
-            Some(num) => num,
-            None => {
+    pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
+        let player_num = match get_player_num(&game, np_code) {
+            Ok(Some(num)) => num,
+            Ok(None) => {
                 return Err(GameParseError::CorruptedPlayerData);
+            }
+            Err(e) => {
+                return Err(e);
             }
         };
         let match_result = match get_match_result(&game, player_num) {
@@ -116,19 +121,16 @@ impl fmt::Display for MatchEndType {
     }
 }
 
-fn get_player_num(game: &Game) -> Option<usize> {
+fn get_player_num(game: &Game, np_code: String) -> Result<Option<usize>, GameParseError> {
     let players = game.metadata.players.as_ref().unwrap();
-    let p2_md = players.get(1).unwrap();
-    let p2_np_code = match &p2_md.netplay {
-        Some(c) => &c.code,
-        None => {
-            return None;
-        }
-    };
-    if p2_np_code == "FLOS#497" {
-        Some(1)
+    let p1_np_code = get_np_code(&players, 0)?;
+    let p2_np_code = get_np_code(&players, 1)?;
+    if p1_np_code == &np_code {
+        Ok(Some(0))
+    } else if p2_np_code == &np_code {
+        Ok(Some(1))
     } else {
-        Some(0)
+        Err(GameParseError::GameDoesNotContainPlayer)
     }
 }
 
@@ -196,6 +198,14 @@ fn get_char(game: &Game, player: usize) -> Result<usize, GameParseError> {
         return Err(GameParseError::CorruptedCharData(char_num));
     }
     Ok(char_num)
+}
+
+fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GameParseError> {
+    let p_md = players.get(p_number).unwrap();
+    match &p_md.netplay {
+        Some(c) => Ok(&c.code),
+        None => Err(GameParseError::CorruptedPlayerData),
+    }
 }
 
 fn num_to_char(char_num: usize) -> String {

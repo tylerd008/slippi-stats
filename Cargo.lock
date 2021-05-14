@@ -193,7 +193,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "slippi_info"
+name = "slippi_stats"
 version = "0.1.0"
 dependencies = [
  "peppi",
