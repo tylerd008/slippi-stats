@@ -6,12 +6,14 @@ use peppi::metadata::Player as PlayerMD;
 use peppi::parse;
 use peppi::ParseError;
 use std::path::PathBuf;
-#[derive(Debug)]
+
+use serde::{Serialize, Deserialize};
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameResults {
     results: Vec<GameResult>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameResult {
     player_char: usize,
     opponent_char: usize,
@@ -19,7 +21,7 @@ pub struct GameResult {
     match_result: MatchResult,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum MatchResult {
     Victory(MatchEndType),
     Loss(MatchEndType),
@@ -27,7 +29,7 @@ enum MatchResult {
     Tie,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum MatchEndType {
     Stocks,
     Timeout,
@@ -54,7 +56,7 @@ impl GameResults {
         self.results.push(game);
     }
 
-    pub fn win_percentage(&self) -> f64 {
+    pub fn total_win_percentage(&self) -> f64 {
         let mut wins = 0;
 
         for game in &self.results {
@@ -68,6 +70,30 @@ impl GameResults {
             }
         }
         wins as f64 / self.results.len() as f64
+    }
+
+    pub fn character_win_percentage(&self, character: usize) -> Option<f64> {
+        let mut games = 0;
+        let mut wins = 0;
+
+        for game in &self.results {
+            if game.player_char == character {
+                games += 1;
+                match &game.match_result {
+                    MatchResult::Victory(_) => {
+                        wins += 1;
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+        }
+        if games == 0{
+            None
+        } else {
+            return Some(wins as f64 / games as f64)
+        }
     }
 }
 
@@ -115,7 +141,7 @@ impl GameResult {
     pub fn has_player(path: &PathBuf, np_code: String) -> Result<bool, GameParseError> {
         let game = match peppi::game(
             &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames: true }), //skip frames so if game doesn't have player it just gets skipped over
+            Some(parse::Opts { skip_frames: true }), //skip frames so we dont have to parse entire replay if it doesnt contain the player
         ) {
             Ok(val) => val,
             Err(e) => {
