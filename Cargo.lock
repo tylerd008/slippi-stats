@@ -196,7 +196,10 @@ dependencies = [
 name = "slippi_stats"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "peppi",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

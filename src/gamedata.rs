@@ -1,15 +1,18 @@
 use peppi::game::{Frames, Game, Port};
 use std::fmt;
+use std::fs;
 use std::fs::File;
 
+use chrono::{DateTime, Utc};
 use peppi::metadata::Player as PlayerMD;
 use peppi::parse;
 use peppi::ParseError;
 use std::path::PathBuf;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameResults {
+    cache_ver: usize,
     results: Vec<GameResult>,
 }
 
@@ -19,6 +22,7 @@ pub struct GameResult {
     opponent_char: usize,
     stage: usize,
     match_result: MatchResult,
+    timestamp: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,10 +50,86 @@ pub enum GameParseError {
 }
 
 impl GameResults {
+    const CACHE_VER: usize = 1;
     pub fn new() -> Self {
         Self {
             results: Vec::new(),
+            cache_ver: GameResults::CACHE_VER,
         }
+    }
+
+    pub fn parse_dir(p: PathBuf, np_code: String) -> Result<Self, GameParseError> {
+        let mut cache_path = String::from(p.as_path().to_str().unwrap());
+        cache_path.push_str("/.cache");
+        let cache = match fs::read_to_string(&cache_path) {
+            Ok(c) => c,
+            Err(_) => "".to_string(),
+        };
+        let mut results: GameResults = match serde_json::from_str(&cache) {
+            Ok(gr) => gr,
+            Err(_) => GameResults::new(),
+        };
+
+        if results.cache_ver != GameResults::CACHE_VER {
+            results = GameResults::new();
+        }
+
+        let mut cached_count = 0;
+        for entry in fs::read_dir(p).unwrap() {
+            let mut count = 0;
+            let path = entry.unwrap().path();
+            let game_data = match GameResult::get_game_data(&path, true) {
+                Ok(gd) => gd,
+                Err(e) => {
+                    println!("error {:?} when parsing game {:?}", e, path);
+                    continue;
+                }
+            };
+            let dt = serde_json::to_string(&game_data.metadata.date.unwrap()).unwrap();
+            if cache.contains(&dt) {
+                cached_count += 1;
+                println!("game already cached, skipping");
+                continue;
+            }
+
+            match GameResult::has_player(&game_data, np_code.to_string()) {
+                Ok(has_player) => {
+                    if !has_player {
+                        println!("Game does not contain player. Skipping.");
+                        continue;
+                    }
+                }
+                Err(e) => {
+                    println!("Error {:?}, when parsing game: {:?}", e, path);
+                    continue;
+                }
+            }
+            let gd_wf = match GameResult::get_game_data(&path, false) {
+                Ok(gd) => gd,
+                Err(e) => {
+                    println!("error {:?} when parsing game {:?}", e, path);
+                    continue;
+                }
+            };
+            let result = match GameResult::parse_game(gd_wf, np_code.to_string()) {
+                Ok(g) => g,
+                Err(e) => {
+                    println!("Error when parsing game result: {:?}", e);
+                    continue;
+                }
+            };
+
+            //println!("{}", &result);
+            results.add_game(result);
+            count += 1;
+            if count % 50 == 0 {
+                println!("Processed game number: {}", count);
+            }
+        }
+        let serial = serde_json::to_string(&results).unwrap();
+        fs::write(cache_path, serial).unwrap();
+        println!("{} already cached", cached_count);
+        Ok(results)
     }
 
     pub fn add_game(&mut self, game: GameResult) {
@@ -89,25 +169,16 @@ impl GameResults {
                 }
             }
         }
-        if games == 0{
+        if games == 0 {
             None
         } else {
-            return Some(wins as f64 / games as f64)
+            return Some(wins as f64 / games as f64);
         }
     }
 }
 
 impl GameResult {
-    pub fn parse_game(path: PathBuf, np_code: String) -> Result<Self, GameParseError> {
-        let game = match peppi::game(
-            &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames: false }),
-        ) {
-            Ok(val) => val,
-            Err(e) => {
-                return Err(GameParseError::PeppiError(e));
-            }
-        };
+    pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
         let player_num = match get_player_num(&game, np_code) {
             Some(num) => num,
             None => {
@@ -124,6 +195,8 @@ impl GameResult {
         let player_char = get_char(&game, player_num)?;
         let opponent_char = get_char(&game, 1 - player_num)?;
 
+        let timestamp = game.metadata.date.unwrap();
+
         let stage = game.start.stage.0 as usize;
 
         if stage == 0 || stage == 1 || stage == 21 || stage > 32 {
@@ -135,19 +208,23 @@ impl GameResult {
             opponent_char,
             stage,
             match_result,
+            timestamp,
         })
     }
 
-    pub fn has_player(path: &PathBuf, np_code: String) -> Result<bool, GameParseError> {
-        let game = match peppi::game(
+    pub fn get_game_data(path: &PathBuf, skip_frames: bool) -> Result<Game, GameParseError> {
+        match peppi::game(
             &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames: true }), //skip frames so we dont have to parse entire replay if it doesnt contain the player
+            Some(parse::Opts { skip_frames }),
         ) {
-            Ok(val) => val,
+            Ok(val) => Ok(val),
             Err(e) => {
                 return Err(GameParseError::PeppiError(e));
             }
-        };
+        }
+    }
+
+    pub fn has_player(game: &Game, np_code: String) -> Result<bool, GameParseError> {
         let players = game.metadata.players.as_ref().unwrap();
         let p1_np_code = get_np_code(&players, 0)?;
         let p2_np_code = get_np_code(&players, 1)?;
@@ -217,7 +294,7 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
     };
     let pp_lf = &data[data.len() - 1].ports[player_num]; //player port last frame
 
-    let op_lf = &data[data.len() - 1].ports[1 - player_num]; //opponent player last frame
+    let op_lf = &data[data.len() - 1].ports[1 - player_num]; //opponent port last frame
 
     let p_end_stocks = pp_lf.leader.post.stocks;
     let o_end_stocks = op_lf.leader.post.stocks;
@@ -225,8 +302,8 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
     let ev20 = game.end.v2_0.as_ref().unwrap();
 
     if ev20.lras_initiator != None {
-        let asdf = ev20.lras_initiator.unwrap();
-        match asdf {
+        let port = ev20.lras_initiator.unwrap();
+        match port {
             Port::P1 => {
                 return Ok(MatchResult::EarlyEnd(1));
             }
