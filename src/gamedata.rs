@@ -55,16 +55,6 @@ pub enum ArgType {
     Character(usize),
 }
 
-pub enum InfoType {
-    Winrate(f64),
-    Matchups(Vec<f64>),
-}
-
-pub struct Info {
-    info_type: InfoType,
-    arg_type: ArgType,
-}
-
 impl GameResults {
     const CACHE_VER: usize = 1;
     pub fn new() -> Self {
@@ -91,8 +81,8 @@ impl GameResults {
         }
 
         let mut cached_count = 0;
+        let mut count = 0;
         for entry in fs::read_dir(p).unwrap() {
-            let mut count = 0;
             let path = entry.unwrap().path();
             let game_data = match GameResult::get_game_data(&path, true) {
                 Ok(gd) => gd,
@@ -105,7 +95,6 @@ impl GameResults {
             if cache.contains(&dt) {
                 //not sure what's better: this, or loading the deserialed data and then iterating through it and checking each gamedata
                 cached_count += 1;
-                println!("game already cached, skipping");
                 continue;
             }
 
@@ -149,22 +138,6 @@ impl GameResults {
 
     pub fn add_game(&mut self, game: GameResult) {
         self.results.push(game);
-    }
-
-    pub fn total_win_percentage(&self) -> f64 {
-        let mut wins = 0;
-
-        for game in &self.results {
-            match &game.match_result {
-                MatchResult::Victory(_) => {
-                    wins += 1;
-                }
-                _ => {
-                    continue;
-                }
-            }
-        }
-        wins as f64 / self.results.len() as f64
     }
 
     pub fn winrate(&self, arg: &ArgType) {
@@ -259,7 +232,7 @@ impl GameResults {
                 }
             }
         }
-        for i in 2..32 {
+        for i in 2..33 {
             if stage_data[i].1 == 0 || i == 21 {
                 continue;
             }

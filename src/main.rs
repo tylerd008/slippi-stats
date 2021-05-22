@@ -1,7 +1,7 @@
 //TODO: refactor basically everything
 mod gamedata;
 
-use gamedata::{ArgType, GameResults, Info};
+use gamedata::{ArgType, GameResults};
 
 use std::env;
 use std::fs;
