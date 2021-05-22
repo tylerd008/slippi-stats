@@ -1,5 +1,6 @@
 //TODO: refactor basically everything
 mod gamedata;
+mod macros;
 
 use gamedata::{ArgType, GameResults};
 
@@ -27,26 +28,49 @@ fn main() {
             return;
         }
     };
-    loop {
-        let mut input = String::new();
-        println!("Input a command:");
-        io::stdin()
-            .read_line(&mut input)
-            .expect("failed to read line");
-        match &format_input(input)[..] {
-            "character" => character(&results),
-            "stage" => stage(&results),
-            "matchup" => matchup(&results),
-            "help" => help(),
-            "end" => {
-                break;
-            }
-            _ => println!("Unrecognized command."),
+    command_loop!(
+        false,
+        "character" => character(&results),
+        "stage" => stage(&results),
+        "matchup" => matchup(&results),
+        "help" => help(),
+        "end" => {
+            break;
         }
-    }
+    );
 }
 
 fn character(data: &GameResults) {
+    let character = char_loop();
+    command_loop!(
+        true,
+        "winrate" => data.winrate(&character),
+        "stages" => data.stages(&character),
+        "matchups" => data.matchups(&character)
+    );
+}
+
+fn stage(data: &GameResults) {
+    let stage = stage_loop();
+    command_loop!(
+        true,
+        "winrate" => data.winrate(&stage),
+        "characters" => data.characters(&stage),
+        "matchups" => data.matchups(&stage)
+    );
+}
+
+fn matchup(data: &GameResults) {
+    println!("Input player character:");
+    let player_char = char_loop();
+    println!("Input opponent character:");
+    let opponent_char = char_loop();
+    data.matchup(player_char, opponent_char);
+}
+
+fn help() {}
+
+fn char_loop() -> ArgType {
     let character: ArgType;
     loop {
         let mut input = String::new();
@@ -70,25 +94,10 @@ fn character(data: &GameResults) {
         };
         break;
     }
-    loop {
-        let mut input2 = String::new();
-        io::stdin()
-            .read_line(&mut input2)
-            .expect("failed to read line");
-        match &format_input(input2)[..] {
-            "winrate" => data.winrate(&character),
-            "stages" => data.stages(&character),
-            "matchups" => data.matchups(&character),
-            _ => {
-                println!("Unrecognized command.");
-                continue;
-            }
-        }
-        break;
-    }
+    character
 }
 
-fn stage(data: &GameResults) {
+fn stage_loop() -> ArgType {
     let stage: ArgType;
     loop {
         let mut input = String::new();
@@ -112,76 +121,8 @@ fn stage(data: &GameResults) {
         };
         break;
     }
-    loop {
-        let mut input2 = String::new();
-        io::stdin()
-            .read_line(&mut input2)
-            .expect("failed to read line");
-        match &format_input(input2)[..] {
-            "winrate" => data.winrate(&stage),
-            "characters" => data.characters(&stage),
-            "matchups" => data.matchups(&stage),
-            _ => {
-                println!("Unrecognized command.");
-                continue;
-            }
-        }
-        break;
-    }
+    stage
 }
-
-fn matchup(data: &GameResults) {
-    println!("Input player character:");
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("failed to read line"); //player char
-    let player_char: usize;
-    loop {
-        let arg = match parse_arg(&input) {
-            Some(a) => a,
-            None => {
-                println!("Unrecognized character.");
-                continue;
-            }
-        };
-
-        player_char = match arg {
-            ArgType::Character(num) => num,
-            ArgType::Stage(_) => {
-                println!("Please input a character name.");
-                continue;
-            }
-        };
-        break;
-    }
-    println!("Input opponent character:");
-    let mut input2 = String::new();
-    io::stdin()
-        .read_line(&mut input2)
-        .expect("failed to read line"); //opponent char
-    loop {
-        let arg = match parse_arg(&input2) {
-            Some(a) => a,
-            None => {
-                println!("Unrecognized character.");
-                continue;
-            }
-        };
-
-        match arg {
-            ArgType::Character(num) => data.matchup(player_char, num),
-            ArgType::Stage(_) => {
-                println!("Please input a character name.");
-                continue;
-            }
-        };
-        println!("end of cmd");
-        break;
-    }
-}
-
-fn help() {}
 
 fn format_input(arg: String) -> String {
     let arg = arg.trim();

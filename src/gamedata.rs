@@ -50,6 +50,7 @@ pub enum GameParseError {
     PeppiError(ParseError),
 }
 
+#[derive(Debug)]
 pub enum ArgType {
     Stage(usize),
     Character(usize),
@@ -246,7 +247,16 @@ impl GameResults {
         print_data(DataType::Characters, &char_data);
     }
 
-    pub fn matchup(&self, player: usize, opponent: usize) {
+    pub fn matchup(&self, player: ArgType, opponent: ArgType) {
+        let player = match player {
+            ArgType::Character(num) => num,
+            _ => unreachable!(),
+        };
+
+        let opponent = match opponent {
+            ArgType::Character(num) => num,
+            _ => unreachable!(),
+        };
         let mut games = 0;
         let mut wins = 0;
         let mut stage_data = vec![(0, 0); 33];
