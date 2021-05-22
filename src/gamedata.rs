@@ -174,7 +174,7 @@ impl GameResults {
         if games == 0 {
             println!("No data for input.");
         } else {
-            println!("{}", winrate_string(wins, games));
+            println!("{}", winrate_string(wins, games, true));
         }
     }
 
@@ -272,7 +272,7 @@ impl GameResults {
             }
         }
 
-        println!("{}", winrate_string(wins, games));
+        println!("{}", winrate_string(wins, games, true));
         print_data(DataType::Stages, &stage_data);
     }
 }
@@ -404,14 +404,21 @@ fn print_data(data_type: DataType, data: &Vec<(usize, usize)>) {
             "{} {} {}",
             data_type,
             data_type.parse(i),
-            winrate_string(data[i].0, data[i].1)
+            winrate_string(data[i].0, data[i].1, false)
         );
     }
 }
 
-fn winrate_string(wins: usize, games: usize) -> String {
+fn winrate_string(wins: usize, games: usize, standalone: bool) -> String {
+    let prefix: String;
+    if standalone {
+        prefix = String::from("Won");
+    } else {
+        prefix = String::from("won");
+    }
     format!(
-        "won {} of {} games ({}%)",
+        "{} {} of {} games ({:.2}%).",
+        prefix,
         wins,
         games,
         (wins as f64 / games as f64) * 100.0
