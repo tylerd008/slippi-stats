@@ -1,3 +1,4 @@
+//TODO: refactoringggggg
 use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs;
@@ -49,6 +50,21 @@ pub enum GameParseError {
     PeppiError(ParseError),
 }
 
+pub enum ArgType {
+    Stage(usize),
+    Character(usize),
+}
+
+pub enum InfoType {
+    Winrate(f64),
+    Matchups(Vec<f64>),
+}
+
+pub struct Info {
+    info_type: InfoType,
+    arg_type: ArgType,
+}
+
 impl GameResults {
     const CACHE_VER: usize = 1;
     pub fn new() -> Self {
@@ -60,7 +76,7 @@ impl GameResults {
 
     pub fn parse_dir(p: PathBuf, np_code: String) -> Result<Self, GameParseError> {
         let mut cache_path = String::from(p.as_path().to_str().unwrap());
-        cache_path.push_str("/.cache");
+        cache_path.push_str(&format!("/{}.cache", np_code));
         let cache = match fs::read_to_string(&cache_path) {
             Ok(c) => c,
             Err(_) => "".to_string(),
@@ -87,6 +103,7 @@ impl GameResults {
             };
             let dt = serde_json::to_string(&game_data.metadata.date.unwrap()).unwrap();
             if cache.contains(&dt) {
+                //not sure what's better: this, or loading the deserialed data and then iterating through it and checking each gamedata
                 cached_count += 1;
                 println!("game already cached, skipping");
                 continue;
@@ -118,8 +135,6 @@ impl GameResults {
                     continue;
                 }
             };
-
-            //println!("{}", &result);
             results.add_game(result);
             count += 1;
             if count % 50 == 0 {
@@ -152,27 +167,177 @@ impl GameResults {
         wins as f64 / self.results.len() as f64
     }
 
-    pub fn character_win_percentage(&self, character: usize) -> Option<f64> {
+    pub fn winrate(&self, arg: &ArgType) {
         let mut games = 0;
         let mut wins = 0;
 
         for game in &self.results {
-            if game.player_char == character {
-                games += 1;
-                match &game.match_result {
-                    MatchResult::Victory(_) => {
-                        wins += 1;
+            match arg {
+                ArgType::Character(num) => {
+                    if &game.player_char == num {
+                        games += 1;
+                        if game.is_victory() {
+                            wins += 1;
+                        }
                     }
-                    _ => {
-                        continue;
+                }
+                ArgType::Stage(num) => {
+                    if &game.stage == num {
+                        games += 1;
+                        if game.is_victory() {
+                            wins += 1;
+                        }
                     }
                 }
             }
         }
         if games == 0 {
-            None
+            println!("No data for input.");
         } else {
-            return Some(wins as f64 / games as f64);
+            println!(
+                "Won {} out of {} games ({}%)",
+                wins,
+                games,
+                (wins as f64 / games as f64) * 100.00
+            );
+        }
+    }
+
+    pub fn matchups(&self, arg: &ArgType) {
+        let mut matchup_data: Vec<(usize, usize)> = vec![(0, 0); 26];
+
+        for game in &self.results {
+            match arg {
+                ArgType::Character(num) => {
+                    if &game.player_char == num {
+                        matchup_data[game.opponent_char].1 += 1;
+                        if game.is_victory() {
+                            matchup_data[game.opponent_char].0 += 1;
+                        }
+                    }
+                }
+                ArgType::Stage(num) => {
+                    if &game.stage == num {
+                        matchup_data[game.opponent_char].1 += 1;
+                        if game.is_victory() {
+                            matchup_data[game.opponent_char].0 += 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        for i in 0..25 {
+            if matchup_data[i].1 == 0 {
+                continue;
+            }
+            println!(
+                "vs {}: won {} of {} games ({}%)",
+                num_to_char(i),
+                matchup_data[i].0,
+                matchup_data[i].1,
+                (matchup_data[i].0 as f64 / matchup_data[i].1 as f64) * 100.0
+            );
+        }
+    }
+
+    pub fn stages(&self, arg: &ArgType) {
+        let char_num = match arg {
+            ArgType::Character(num) => num,
+            ArgType::Stage(_) => {
+                println!("This function only accepts character input."); //this should never run but i'll have something here to be safe
+                return;
+            }
+        };
+        let mut stage_data: Vec<(usize, usize)> = vec![(0, 0); 33];
+
+        for game in &self.results {
+            if &game.player_char == char_num {
+                stage_data[game.stage].1 += 1;
+                if game.is_victory() {
+                    stage_data[game.stage].0 += 1;
+                }
+            }
+        }
+        for i in 2..32 {
+            if stage_data[i].1 == 0 || i == 21 {
+                continue;
+            }
+            println!(
+                "On {} won {} of {} games ({}%)",
+                num_to_stage(i),
+                stage_data[i].0,
+                stage_data[i].1,
+                (stage_data[i].0 as f64 / stage_data[i].1 as f64) * 100.0
+            )
+        }
+    }
+
+    pub fn characters(&self, arg: &ArgType) {
+        let stage_num = match arg {
+            ArgType::Stage(num) => num,
+            ArgType::Character(_) => {
+                println!("This function only stage input."); //this should never run but i'll have something here to be safe
+                return;
+            }
+        };
+        let mut char_data: Vec<(usize, usize)> = vec![(0, 0); 36];
+
+        for game in &self.results {
+            if &game.stage == stage_num {
+                char_data[game.player_char].1 += 1;
+                if game.is_victory() {
+                    char_data[game.player_char].0 += 1;
+                }
+            }
+        }
+        for i in 0..36 {
+            if char_data[i].1 == 0 {
+                continue;
+            }
+            println!(
+                "As {} won {} of {} games ({}%)",
+                num_to_char(i),
+                char_data[i].0,
+                char_data[i].1,
+                (char_data[i].0 as f64 / char_data[i].1 as f64) * 100.0
+            )
+        }
+    }
+
+    pub fn matchup(&self, player: usize, opponent: usize) {
+        let mut games = 0;
+        let mut wins = 0;
+        let mut stage_data = vec![(0, 0); 33];
+
+        for game in &self.results {
+            if game.player_char == player && game.opponent_char == opponent {
+                games += 1;
+                stage_data[game.stage].1 += 1;
+                if game.is_victory() {
+                    wins += 1;
+                    stage_data[game.stage].0 += 1;
+                }
+            }
+        }
+
+        println!(
+            "Won {} of {} games ({}%)",
+            wins,
+            games,
+            (wins as f64 / games as f64) * 100.00
+        );
+        for i in 2..32 {
+            if stage_data[i].1 == 0 || i == 21 {
+                continue;
+            }
+            println!(
+                "On {} won {} of {} games ({}%)",
+                num_to_stage(i),
+                stage_data[i].0,
+                stage_data[i].1,
+                (stage_data[i].0 as f64 / stage_data[i].1 as f64) * 100.0
+            )
         }
     }
 }
@@ -230,6 +395,13 @@ impl GameResult {
         let p2_np_code = get_np_code(&players, 1)?;
 
         Ok(p1_np_code == np_code || p2_np_code == np_code)
+    }
+
+    pub fn is_victory(&self) -> bool {
+        match self.match_result {
+            MatchResult::Victory(_) => true,
+            _ => false,
+        }
     }
 }
 
@@ -401,7 +573,7 @@ fn num_to_stage(stage_num: usize) -> String {
         8 => String::from("Yoshi's Story"),
         9 => String::from("Onett"),
         10 => String::from("Mute City"),
-        11 => String::from("Raianbow Cruise"),
+        11 => String::from("Rainbow Cruise"),
         12 => String::from("Jungle Japes"),
         13 => String::from("Great Bay"),
         14 => String::from("Hyrule Temple"),
