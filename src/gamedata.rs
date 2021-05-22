@@ -55,6 +55,12 @@ pub enum ArgType {
     Character(usize),
 }
 
+enum DataType {
+    Stages,
+    Characters,
+    Opponents,
+}
+
 impl GameResults {
     const CACHE_VER: usize = 1;
     pub fn new() -> Self {
@@ -167,12 +173,7 @@ impl GameResults {
         if games == 0 {
             println!("No data for input.");
         } else {
-            println!(
-                "Won {} out of {} games ({}%)",
-                wins,
-                games,
-                (wins as f64 / games as f64) * 100.00
-            );
+            println!("{}", winrate_string(wins, games));
         }
     }
 
@@ -200,18 +201,7 @@ impl GameResults {
             }
         }
 
-        for i in 0..25 {
-            if matchup_data[i].1 == 0 {
-                continue;
-            }
-            println!(
-                "vs {}: won {} of {} games ({}%)",
-                num_to_char(i),
-                matchup_data[i].0,
-                matchup_data[i].1,
-                (matchup_data[i].0 as f64 / matchup_data[i].1 as f64) * 100.0
-            );
-        }
+        print_data(DataType::Opponents, &matchup_data);
     }
 
     pub fn stages(&self, arg: &ArgType) {
@@ -232,18 +222,7 @@ impl GameResults {
                 }
             }
         }
-        for i in 2..33 {
-            if stage_data[i].1 == 0 || i == 21 {
-                continue;
-            }
-            println!(
-                "On {} won {} of {} games ({}%)",
-                num_to_stage(i),
-                stage_data[i].0,
-                stage_data[i].1,
-                (stage_data[i].0 as f64 / stage_data[i].1 as f64) * 100.0
-            )
-        }
+        print_data(DataType::Stages, &stage_data);
     }
 
     pub fn characters(&self, arg: &ArgType) {
@@ -264,18 +243,7 @@ impl GameResults {
                 }
             }
         }
-        for i in 0..36 {
-            if char_data[i].1 == 0 {
-                continue;
-            }
-            println!(
-                "As {} won {} of {} games ({}%)",
-                num_to_char(i),
-                char_data[i].0,
-                char_data[i].1,
-                (char_data[i].0 as f64 / char_data[i].1 as f64) * 100.0
-            )
-        }
+        print_data(DataType::Characters, &char_data);
     }
 
     pub fn matchup(&self, player: usize, opponent: usize) {
@@ -294,24 +262,8 @@ impl GameResults {
             }
         }
 
-        println!(
-            "Won {} of {} games ({}%)",
-            wins,
-            games,
-            (wins as f64 / games as f64) * 100.00
-        );
-        for i in 2..32 {
-            if stage_data[i].1 == 0 || i == 21 {
-                continue;
-            }
-            println!(
-                "On {} won {} of {} games ({}%)",
-                num_to_stage(i),
-                stage_data[i].0,
-                stage_data[i].1,
-                (stage_data[i].0 as f64 / stage_data[i].1 as f64) * 100.0
-            )
-        }
+        println!("{}", winrate_string(wins, games));
+        print_data(DataType::Stages, &stage_data);
     }
 }
 
@@ -411,6 +363,49 @@ impl fmt::Display for MatchEndType {
             MatchEndType::Timeout => write!(f, "timeout"),
         }
     }
+}
+
+impl fmt::Display for DataType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DataType::Stages => write!(f, "On"),
+            DataType::Characters => write!(f, "As"),
+            DataType::Opponents => write!(f, "Vs."),
+        }
+    }
+}
+
+impl DataType {
+    fn parse(&self, data_label: usize) -> String {
+        match self {
+            DataType::Stages => num_to_stage(data_label),
+            DataType::Characters => num_to_char(data_label),
+            DataType::Opponents => num_to_char(data_label),
+        }
+    }
+}
+
+fn print_data(data_type: DataType, data: &Vec<(usize, usize)>) {
+    for i in 0..data.len() {
+        if data[i].1 == 0 {
+            continue;
+        }
+        println!(
+            "{} {} {}",
+            data_type,
+            data_type.parse(i),
+            winrate_string(data[i].0, data[i].1)
+        );
+    }
+}
+
+fn winrate_string(wins: usize, games: usize) -> String {
+    format!(
+        "won {} of {} games ({}%)",
+        wins,
+        games,
+        (wins as f64 / games as f64) * 100.0
+    )
 }
 
 fn get_player_num(game: &Game, np_code: String) -> Option<usize> {
@@ -537,6 +532,9 @@ fn num_to_char(char_num: usize) -> String {
 
 fn num_to_stage(stage_num: usize) -> String {
     match stage_num {
+        //dummy results are so the function for printing data doesn't freak out
+        0 => String::from("dummy"),
+        1 => String::from("dummy"),
         2 => String::from("Fountain of Dreams"),
         3 => String::from("Pokémon Stadium"),
         4 => String::from("Princess Peach's Castle"),
@@ -556,6 +554,7 @@ fn num_to_stage(stage_num: usize) -> String {
         18 => String::from("Fourside"),
         19 => String::from("Mushroom Kingdom I"),
         20 => String::from("Mushroom Kingdom II"),
+        21 => String::from("dummy"),
         22 => String::from("Venom"),
         23 => String::from("Poké Floats"),
         24 => String::from("Big Blue"),
