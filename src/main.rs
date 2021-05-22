@@ -30,10 +30,10 @@ fn main() {
     };
     command_loop!(
         false,
+        "The available commands are `character`, `stage`, `matchup`, and `end`.",
         "character" => character(&results),
         "stage" => stage(&results),
         "matchup" => matchup(&results),
-        "help" => help(),
         "end" => {
             break;
         }
@@ -41,9 +41,11 @@ fn main() {
 }
 
 fn character(data: &GameResults) {
+    println!("Input the name of a character.");
     let character = char_loop();
     command_loop!(
         true,
+        "The available commands are `winrate`, `stages`, and `matchups`.",
         "winrate" => data.winrate(&character),
         "stages" => data.stages(&character),
         "matchups" => data.matchups(&character)
@@ -54,6 +56,7 @@ fn stage(data: &GameResults) {
     let stage = stage_loop();
     command_loop!(
         true,
+        "The available commands are `winrate`, `characters`, and `matchups`.",
         "winrate" => data.winrate(&stage),
         "characters" => data.characters(&stage),
         "matchups" => data.matchups(&stage)
@@ -67,8 +70,6 @@ fn matchup(data: &GameResults) {
     let opponent_char = char_loop();
     data.matchup(player_char, opponent_char);
 }
-
-fn help() {}
 
 fn char_loop() -> ArgType {
     let character: ArgType;
@@ -99,6 +100,7 @@ fn char_loop() -> ArgType {
 
 fn stage_loop() -> ArgType {
     let stage: ArgType;
+    println!("Input the name of a stage.");
     loop {
         let mut input = String::new();
         io::stdin()

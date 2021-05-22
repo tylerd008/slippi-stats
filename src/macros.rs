@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! command_loop {
-    ($break_at_end:expr, $ ($cmd:expr => $result:expr),*) => {
+    ($break_at_end:expr, $help_text:expr, $ ($cmd:expr => $result:expr),*) => {
         loop {
             let mut input = String::new();
             io::stdin()
@@ -9,6 +9,9 @@ macro_rules! command_loop {
             let input = format_input(input);
             match &input[..] {
                 $($cmd => $result,)*
+                "help" => {println!("{}", $help_text);
+                    continue;
+                    }
                 _ => println!("Unrecognized command.")
             }
             if $break_at_end{//this is so we can keep the main input loop running, while ending the others after a subcommand is ran
