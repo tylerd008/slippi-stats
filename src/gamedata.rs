@@ -84,6 +84,7 @@ impl GameResults {
         };
 
         if results.cache_ver != GameResults::CACHE_VER {
+            println!("Cache detected but out of date. Rebuilding.");
             results = GameResults::new();
         }
 
@@ -171,11 +172,14 @@ impl GameResults {
                 }
             }
         }
-        if games == 0 {
-            println!("No data for input.");
-        } else {
-            println!("{}", winrate_string(wins, games, true));
-        }
+        let ws = match winrate_string(wins, games, true) {
+            Some(s) => s,
+            None => {
+                println!("No data for given input");
+                return;
+            }
+        };
+        println!("{}", ws);
     }
 
     pub fn matchups(&self, arg: &ArgType) {
@@ -201,7 +205,6 @@ impl GameResults {
                 }
             }
         }
-
         print_data(DataType::Opponents, &matchup_data);
     }
 
@@ -271,8 +274,15 @@ impl GameResults {
                 }
             }
         }
+        let ws = match winrate_string(wins, games, true) {
+            Some(s) => s,
+            None => {
+                println!("No data for given input");
+                return;
+            }
+        };
 
-        println!("{}", winrate_string(wins, games, true));
+        println!("{}", ws);
         print_data(DataType::Stages, &stage_data);
     }
 }
@@ -396,33 +406,42 @@ impl DataType {
 }
 
 fn print_data(data_type: DataType, data: &Vec<(usize, usize)>) {
+    let mut is_data = false;
     for i in 0..data.len() {
-        if data[i].1 == 0 {
-            continue;
-        }
-        println!(
-            "{} {} {}",
-            data_type,
-            data_type.parse(i),
-            winrate_string(data[i].0, data[i].1, false)
-        );
+        let ws = match winrate_string(data[i].0, data[i].1, false) {
+            Some(s) => {
+                is_data = true;
+                s
+            }
+            None => {
+                continue;
+            }
+        };
+
+        println!("{} {} {}", data_type, data_type.parse(i), ws);
+    }
+    if !is_data {
+        println!("No data for given input.");
     }
 }
 
-fn winrate_string(wins: usize, games: usize, standalone: bool) -> String {
+fn winrate_string(wins: usize, games: usize, standalone: bool) -> Option<String> {
+    if games == 0 {
+        return None;
+    }
     let prefix: String;
     if standalone {
         prefix = String::from("Won");
     } else {
         prefix = String::from("won");
     }
-    format!(
+    Some(format!(
         "{} {} of {} games ({:.2}%).",
         prefix,
         wins,
         games,
         (wins as f64 / games as f64) * 100.0
-    )
+    ))
 }
 
 fn get_player_num(game: &Game, np_code: String) -> Option<usize> {
