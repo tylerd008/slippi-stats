@@ -1,4 +1,3 @@
-//TODO: refactor basically everything
 mod gamedata;
 mod macros;
 

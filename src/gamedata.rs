@@ -1,4 +1,3 @@
-//TODO: refactoringggggg
 use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs;
