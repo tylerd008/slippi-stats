@@ -5,8 +5,6 @@ mod macros;
 use gamedata::{ArgType, GameResults};
 
 use std::env;
-use std::fs;
-use std::fs::File;
 use std::path::PathBuf;
 
 use std::io;
@@ -149,7 +147,7 @@ fn parse_arg(arg: &str) -> Option<ArgType> {
         "ness" => ArgType::Character(11),
         "peach" => ArgType::Character(12),
         "pikachu" => ArgType::Character(13),
-        "ice climbers" | "ics" => ArgType::Character(14),
+        "ice climbers" | "ics" | "ic" => ArgType::Character(14),
         "jigglypuff" | "puff" => ArgType::Character(15),
         "samus" => ArgType::Character(16),
         "yoshi" => ArgType::Character(17),
@@ -163,12 +161,12 @@ fn parse_arg(arg: &str) -> Option<ArgType> {
         "ganondorf" | "ganon" => ArgType::Character(25),
         "fountain of dreams" | "fountain" | "fod" => ArgType::Stage(2),
         "pokémon stadium" | "pokemon stadium" | "pokemon" | "stadium" => ArgType::Stage(3),
-        "yoshi's story" | "yoshi's" => ArgType::Stage(8),
-        "dream land n64" | "dream land" | "dreamland" => ArgType::Stage(29),
-        "battlefield" => ArgType::Stage(31),
+        "yoshi's story" | "yoshi's" | "ys" => ArgType::Stage(8),
+        "dream land n64" | "dream land" | "dreamland" | "dl" => ArgType::Stage(29),
+        "battlefield" | "bf" => ArgType::Stage(31),
         "final destination" | "fd" => ArgType::Stage(32),
         //rest of the stages included just for completeness' sake
-        "princess peach's castle" | "peach's castle" => ArgType::Stage(4),
+        "princess peach's castle" | "peach's castle" | "ppc" => ArgType::Stage(4),
         "kongo jungle" | "kj" => ArgType::Stage(5),
         "brinstar" => ArgType::Stage(6),
         "corneria" => ArgType::Stage(7),
