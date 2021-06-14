@@ -1,5 +1,6 @@
 mod gamedata;
 mod macros;
+mod text;
 
 use gamedata::{ArgType, GameResults};
 
@@ -28,10 +29,10 @@ fn main() {
     command_loop!(
         false,
         "The available commands are `character`, `stage`, `matchup`, and `end`.",
-        "character" => character(&results),
-        "stage" => stage(&results),
-        "matchup" => matchup(&results),
-        "end" => {
+        "character", "adf" => character(&results),
+        "stage", "text::STAGE_HELP_TEXT" => stage(&results),
+        "matchup", "text::MATCHUP_HELP_TEXT" => matchup(&results),
+        "end", "text::END_HELP_TEXT" => {
             break;
         }
     );
@@ -43,9 +44,9 @@ fn character(data: &GameResults) {
     command_loop!(
         true,
         "The available commands are `winrate`, `stages`, and `matchups`.",
-        "winrate" => data.winrate(&character),
-        "stages" => data.stages(&character),
-        "matchups" => data.matchups(&character)
+        "winrate", text::C_WINRATE_HELP_TEXT => data.winrate(&character),
+        "stages", text::C_STAGES_HELP_TEXT => data.stages(&character),
+        "matchups", text::C_MATCHUPS_HELP_TEXT => data.matchups(&character)
     );
 }
 
@@ -54,9 +55,9 @@ fn stage(data: &GameResults) {
     command_loop!(
         true,
         "The available commands are `winrate`, `characters`, and `matchups`.",
-        "winrate" => data.winrate(&stage),
-        "characters" => data.characters(&stage),
-        "matchups" => data.matchups(&stage)
+        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
+        "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(&stage),
+        "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(&stage)
     );
 }
 
