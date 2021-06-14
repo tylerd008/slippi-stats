@@ -284,6 +284,15 @@ impl GameResults {
         println!("{}", ws);
         print_data(DataType::Stages, &stage_data);
     }
+
+    pub fn last(&self, num_games: usize) {
+        let mut i = self.results.len() - num_games;
+        let end = self.results.len();
+        while i < end {
+            println!("{}", self.results[i]);
+            i += 1;
+        }
+    }
 }
 
 impl GameResult {

@@ -31,6 +31,7 @@ fn main() {
         "character" => character(&results),
         "stage" => stage(&results),
         "matchup" => matchup(&results),
+        "last" => last(&results),
         "end" => {
             break;
         }
@@ -66,6 +67,28 @@ fn matchup(data: &GameResults) {
     println!("Input opponent character:");
     let opponent_char = char_loop();
     data.matchup(player_char, opponent_char);
+}
+
+fn last(data: &GameResults) {
+    println!("Last how many games?");
+    let num: usize;
+    loop {
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .expect("failed to read line");
+        let input = format_input(input);
+        num = match input.parse::<usize>() {
+            Err(e) /* | Ok(0) */ => {
+                println!("error `{:?}`", e);
+                println!("Please input an integer greater than 0!");
+                continue;
+            }
+            Ok(n) => n,
+        };
+        break;
+    }
+    data.last(num);
 }
 
 fn char_loop() -> ArgType {
