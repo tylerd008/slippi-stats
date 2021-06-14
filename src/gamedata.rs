@@ -62,6 +62,7 @@ enum DataType {
 }
 
 impl GameResults {
+    //rename this to PlayerData
     const CACHE_VER: usize = 1;
     pub fn new() -> Self {
         Self {
@@ -283,6 +284,12 @@ impl GameResults {
 
         println!("{}", ws);
         print_data(DataType::Stages, &stage_data);
+    }
+
+    pub fn last(&self, num_games: usize) {
+        for i in self.results.len()..self.results.len() - num_games {
+            println!("{}", self.results[i]);
+        }
     }
 }
 
