@@ -11,13 +11,13 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GameResults {
+pub struct PlayerData {
     cache_ver: usize,
-    results: Vec<GameResult>,
+    results: Vec<GameData>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GameResult {
+pub struct GameData {
     player_char: usize,
     opponent_char: usize,
     stage: usize,
@@ -61,12 +61,12 @@ enum DataType {
     Opponents,
 }
 
-impl GameResults {
+impl PlayerData {
     const CACHE_VER: usize = 1;
     pub fn new() -> Self {
         Self {
             results: Vec::new(),
-            cache_ver: GameResults::CACHE_VER,
+            cache_ver: PlayerData::CACHE_VER,
         }
     }
 
@@ -77,21 +77,21 @@ impl GameResults {
             Ok(c) => c,
             Err(_) => "".to_string(),
         };
-        let mut results: GameResults = match serde_json::from_str(&cache) {
+        let mut results: PlayerData = match serde_json::from_str(&cache) {
             Ok(gr) => gr,
-            Err(_) => GameResults::new(),
+            Err(_) => PlayerData::new(),
         };
 
-        if results.cache_ver != GameResults::CACHE_VER {
+        if results.cache_ver != PlayerData::CACHE_VER {
             println!("Cache detected but out of date. Rebuilding.");
-            results = GameResults::new();
+            results = PlayerData::new();
         }
 
         let mut cached_count = 0;
         let mut count = 0;
         for entry in fs::read_dir(p).unwrap() {
             let path = entry.unwrap().path();
-            let game_data = match GameResult::get_game_data(&path, true) {
+            let game_data = match GameData::get_game_data(&path, true) {
                 Ok(gd) => gd,
                 Err(e) => {
                     println!("error {:?} when parsing game {:?}", e, path);
@@ -105,7 +105,7 @@ impl GameResults {
                 continue;
             }
 
-            match GameResult::has_player(&game_data, np_code.to_string()) {
+            match GameData::has_player(&game_data, np_code.to_string()) {
                 Ok(has_player) => {
                     if !has_player {
                         println!("Game does not contain player. Skipping.");
@@ -117,14 +117,14 @@ impl GameResults {
                     continue;
                 }
             }
-            let gd_wf = match GameResult::get_game_data(&path, false) {
+            let gd_wf = match GameData::get_game_data(&path, false) {
                 Ok(gd) => gd,
                 Err(e) => {
                     println!("error {:?} when parsing game {:?}", e, path);
                     continue;
                 }
             };
-            let result = match GameResult::parse_game(gd_wf, np_code.to_string()) {
+            let result = match GameData::parse_game(gd_wf, np_code.to_string()) {
                 Ok(g) => g,
                 Err(e) => {
                     println!("Error when parsing game result: {:?}", e);
@@ -143,7 +143,7 @@ impl GameResults {
         Ok(results)
     }
 
-    pub fn add_game(&mut self, game: GameResult) {
+    pub fn add_game(&mut self, game: GameData) {
         self.results.push(game);
     }
 
@@ -295,7 +295,7 @@ impl GameResults {
     }
 }
 
-impl GameResult {
+impl GameData {
     pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
         let player_num = match get_player_num(&game, np_code) {
             Some(num) => num,
@@ -358,7 +358,7 @@ impl GameResult {
     }
 }
 
-impl fmt::Display for GameResult {
+impl fmt::Display for GameData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

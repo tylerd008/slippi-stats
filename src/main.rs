@@ -1,7 +1,7 @@
-mod gamedata;
 mod macros;
+mod playerdata;
 
-use gamedata::{ArgType, GameResults};
+use playerdata::{ArgType, PlayerData};
 
 use std::env;
 use std::path::PathBuf;
@@ -18,10 +18,10 @@ fn main() {
     let np_code = args.get(1).unwrap();
     let p = PathBuf::from(args.get(2).unwrap());
 
-    let results = match GameResults::parse_dir(p, np_code.to_string()) {
+    let results = match PlayerData::parse_dir(p, np_code.to_string()) {
         Ok(r) => r,
         Err(e) => {
-            println!("error {:?} parsing gameresults", e);
+            println!("error {:?} parsing PlayerData", e);
             return;
         }
     };
@@ -38,7 +38,7 @@ fn main() {
     );
 }
 
-fn character(data: &GameResults) {
+fn character(data: &PlayerData) {
     println!("Input the name of a character.");
     let character = char_loop();
     command_loop!(
@@ -50,7 +50,7 @@ fn character(data: &GameResults) {
     );
 }
 
-fn stage(data: &GameResults) {
+fn stage(data: &PlayerData) {
     let stage = stage_loop();
     command_loop!(
         true,
@@ -61,7 +61,7 @@ fn stage(data: &GameResults) {
     );
 }
 
-fn matchup(data: &GameResults) {
+fn matchup(data: &PlayerData) {
     println!("Input player character:");
     let player_char = char_loop();
     println!("Input opponent character:");
@@ -69,7 +69,7 @@ fn matchup(data: &GameResults) {
     data.matchup(player_char, opponent_char);
 }
 
-fn last(data: &GameResults) {
+fn last(data: &PlayerData) {
     println!("Last how many games?");
     let num: usize;
     loop {
