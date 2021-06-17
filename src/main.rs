@@ -129,6 +129,18 @@ fn format_input(arg: String) -> String {
     arg.to_lowercase()
 }
 
+fn format_help_txt(cmds: Vec<String>) -> String {
+    let mut help_txt = String::from("The available commands are ");
+    for i in 0..cmds.len() {
+        println!("cmd: {}", cmds[i]);
+        if i == cmds.len() - 1 {
+            help_txt.push_str("and ");
+        }
+        help_txt.push_str(&cmds[i]);
+    }
+    help_txt
+}
+
 fn parse_arg(arg: &str) -> Option<ArgType> {
     let arg = match &format_input(arg.to_string())[..] {
         "captain falcon" | "falcon" => ArgType::Character(0),
