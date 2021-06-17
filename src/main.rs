@@ -1,5 +1,9 @@
 mod macros;
+<<<<<<< HEAD
+mod text;
+=======
 mod playerdata;
+>>>>>>> main
 
 use playerdata::{ArgType, PlayerData};
 
@@ -27,12 +31,19 @@ fn main() {
     };
     command_loop!(
         false,
+<<<<<<< HEAD
+        "character", text::CHARACTER_HELP_TEXT => character(&results),
+        "stage", text::STAGE_HELP_TEXT => stage(&results),
+        "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
+        "end", text::END_HELP_TEXT => {
+=======
         "The available commands are `character`, `stage`, `matchup`, and `end`.",
         "character" => character(&results),
         "stage" => stage(&results),
         "matchup" => matchup(&results),
         "last" => last(&results),
         "end" => {
+>>>>>>> main
             break;
         }
     );
@@ -43,10 +54,9 @@ fn character(data: &PlayerData) {
     let character = char_loop();
     command_loop!(
         true,
-        "The available commands are `winrate`, `stages`, and `matchups`.",
-        "winrate" => data.winrate(&character),
-        "stages" => data.stages(&character),
-        "matchups" => data.matchups(&character)
+        "winrate", text::C_WINRATE_HELP_TEXT => data.winrate(&character),
+        "stages", text::C_STAGES_HELP_TEXT => data.stages(&character),
+        "matchups", text::C_MATCHUPS_HELP_TEXT => data.matchups(&character)
     );
 }
 
@@ -54,10 +64,9 @@ fn stage(data: &PlayerData) {
     let stage = stage_loop();
     command_loop!(
         true,
-        "The available commands are `winrate`, `characters`, and `matchups`.",
-        "winrate" => data.winrate(&stage),
-        "characters" => data.characters(&stage),
-        "matchups" => data.matchups(&stage)
+        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
+        "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(&stage),
+        "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(&stage)
     );
 }
 
@@ -149,6 +158,18 @@ fn stage_loop() -> ArgType {
 fn format_input(arg: String) -> String {
     let arg = arg.trim();
     arg.to_lowercase()
+}
+
+fn format_help_txt(cmds: Vec<String>) -> String {
+    let mut help_txt = String::from("The available commands are ");
+    for i in 0..cmds.len() {
+        println!("cmd: {}", cmds[i]);
+        if i == cmds.len() - 1 {
+            help_txt.push_str("and ");
+        }
+        help_txt.push_str(&cmds[i]);
+    }
+    help_txt
 }
 
 fn parse_arg(arg: &str) -> Option<ArgType> {

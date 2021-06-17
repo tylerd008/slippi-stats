@@ -1,18 +1,31 @@
+/* #[feature(trace_macros)]
+
+trace_macros!(true); */
+
 #[macro_export]
 macro_rules! command_loop {
-    ($break_at_end:expr, $help_text:expr, $ ($cmd:expr => $result:expr),*) => {
+    ($break_at_end:expr, $ ($cmd:expr, $cmd_help_text:expr => $result:expr),*) => {
         loop {
             let mut input = String::new();
             io::stdin()
                 .read_line(&mut input)
                 .expect("failed to read line");
             let input = format_input(input);
-            match &input[..] {
-                $($cmd => $result,)*
-                "help" => {println!("{}", $help_text);
-                    continue;
-                    }
-                _ => println!("Unrecognized command.")
+            let mut cmds = Vec::new();
+            $ (cmds.push(format!("{}, ", stringify!($cmd)));) *
+            let help_txt = format_help_txt(cmds);
+            if &input[..] == "help"{
+                println!("{}", help_txt);
+                continue;
+            } $(else if &input[..] == $cmd {
+                $result
+            } else if &input[..] == &format!("help {}", $cmd){
+                println!("{}", $cmd_help_text);
+                continue;
+            })*
+            else {
+                println!("Unrecognized command.");
+                continue;
             }
             if $break_at_end{//this is so we can keep the main input loop running, while ending the others after a subcommand is ran
                 break;
