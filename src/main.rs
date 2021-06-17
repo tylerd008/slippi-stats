@@ -1,9 +1,6 @@
 mod macros;
-<<<<<<< HEAD
-mod text;
-=======
 mod playerdata;
->>>>>>> main
+mod text;
 
 use playerdata::{ArgType, PlayerData};
 
@@ -31,19 +28,11 @@ fn main() {
     };
     command_loop!(
         false,
-<<<<<<< HEAD
         "character", text::CHARACTER_HELP_TEXT => character(&results),
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
+        "last", text::LAST_HELP_TEXT => last(&results),
         "end", text::END_HELP_TEXT => {
-=======
-        "The available commands are `character`, `stage`, `matchup`, and `end`.",
-        "character" => character(&results),
-        "stage" => stage(&results),
-        "matchup" => matchup(&results),
-        "last" => last(&results),
-        "end" => {
->>>>>>> main
             break;
         }
     );
