@@ -1,8 +1,11 @@
-mod gamedata;
 mod macros;
+<<<<<<< HEAD
 mod text;
+=======
+mod playerdata;
+>>>>>>> main
 
-use gamedata::{ArgType, GameResults};
+use playerdata::{ArgType, PlayerData};
 
 use std::env;
 use std::path::PathBuf;
@@ -19,25 +22,34 @@ fn main() {
     let np_code = args.get(1).unwrap();
     let p = PathBuf::from(args.get(2).unwrap());
 
-    let results = match GameResults::parse_dir(p, np_code.to_string()) {
+    let results = match PlayerData::parse_dir(p, np_code.to_string()) {
         Ok(r) => r,
         Err(e) => {
-            println!("error {:?} parsing gameresults", e);
+            println!("error {:?} parsing PlayerData", e);
             return;
         }
     };
     command_loop!(
         false,
+<<<<<<< HEAD
         "character", text::CHARACTER_HELP_TEXT => character(&results),
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
         "end", text::END_HELP_TEXT => {
+=======
+        "The available commands are `character`, `stage`, `matchup`, and `end`.",
+        "character" => character(&results),
+        "stage" => stage(&results),
+        "matchup" => matchup(&results),
+        "last" => last(&results),
+        "end" => {
+>>>>>>> main
             break;
         }
     );
 }
 
-fn character(data: &GameResults) {
+fn character(data: &PlayerData) {
     println!("Input the name of a character.");
     let character = char_loop();
     command_loop!(
@@ -48,7 +60,7 @@ fn character(data: &GameResults) {
     );
 }
 
-fn stage(data: &GameResults) {
+fn stage(data: &PlayerData) {
     let stage = stage_loop();
     command_loop!(
         true,
@@ -58,12 +70,34 @@ fn stage(data: &GameResults) {
     );
 }
 
-fn matchup(data: &GameResults) {
+fn matchup(data: &PlayerData) {
     println!("Input player character:");
     let player_char = char_loop();
     println!("Input opponent character:");
     let opponent_char = char_loop();
     data.matchup(player_char, opponent_char);
+}
+
+fn last(data: &PlayerData) {
+    println!("Last how many games?");
+    let num: usize;
+    loop {
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .expect("failed to read line");
+        let input = format_input(input);
+        num = match input.parse::<usize>() {
+            Err(e) /* | Ok(0) */ => {
+                println!("error `{:?}`", e);
+                println!("Please input an integer greater than 0!");
+                continue;
+            }
+            Ok(n) => n,
+        };
+        break;
+    }
+    data.last(num);
 }
 
 fn char_loop() -> ArgType {
