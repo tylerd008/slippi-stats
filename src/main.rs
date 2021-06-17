@@ -52,7 +52,7 @@ fn stage(data: &GameResults) {
     let stage = stage_loop();
     command_loop!(
         true,
-       "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
+        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
         "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(&stage),
         "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(&stage)
     );
