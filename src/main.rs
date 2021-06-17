@@ -29,10 +29,10 @@ fn main() {
     command_loop!(
         false,
         "The available commands are `character`, `stage`, `matchup`, and `end`.",
-        "character", "adf" => character(&results),
-        "stage", "text::STAGE_HELP_TEXT" => stage(&results),
-        "matchup", "text::MATCHUP_HELP_TEXT" => matchup(&results),
-        "end", "text::END_HELP_TEXT" => {
+        "character", text::CHARACTER_HELP_TEXT => character(&results),
+        "stage", text::STAGE_HELP_TEXT => stage(&results),
+        "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
+        "end", text::END_HELP_TEXT => {
             break;
         }
     );
