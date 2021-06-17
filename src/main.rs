@@ -28,7 +28,6 @@ fn main() {
     };
     command_loop!(
         false,
-        "The available commands are `character`, `stage`, `matchup`, and `end`.",
         "character", text::CHARACTER_HELP_TEXT => character(&results),
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
@@ -43,7 +42,6 @@ fn character(data: &GameResults) {
     let character = char_loop();
     command_loop!(
         true,
-        "The available commands are `winrate`, `stages`, and `matchups`.",
         "winrate", text::C_WINRATE_HELP_TEXT => data.winrate(&character),
         "stages", text::C_STAGES_HELP_TEXT => data.stages(&character),
         "matchups", text::C_MATCHUPS_HELP_TEXT => data.matchups(&character)
@@ -54,8 +52,7 @@ fn stage(data: &GameResults) {
     let stage = stage_loop();
     command_loop!(
         true,
-        "The available commands are `winrate`, `characters`, and `matchups`.",
-        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
+       "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
         "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(&stage),
         "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(&stage)
     );

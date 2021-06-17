@@ -4,7 +4,7 @@ trace_macros!(true); */
 
 #[macro_export]
 macro_rules! command_loop {
-    ($break_at_end:expr, $help_text:expr, $ ($cmd:expr, $cmd_help_text:expr => $result:expr),*) => {
+    ($break_at_end:expr, $ ($cmd:expr, $cmd_help_text:expr => $result:expr),*) => {
         loop {
             let mut input = String::new();
             io::stdin()
