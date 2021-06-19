@@ -77,8 +77,7 @@ fn last(data: &PlayerData) {
             .expect("failed to read line");
         let input = format_input(input);
         num = match input.parse::<usize>() {
-            Err(e) /* | Ok(0) */ => {
-                println!("error `{:?}`", e);
+            Err(_) | Ok(0) => {
                 println!("Please input an integer greater than 0!");
                 continue;
             }
