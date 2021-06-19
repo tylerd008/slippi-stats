@@ -5,17 +5,19 @@ trace_macros!(true); */
 #[macro_export]
 macro_rules! command_loop {
     ($break_at_end:expr, $ ($cmd:expr, $cmd_help_text:expr => $result:expr),*) => {
+        let mut cmds = Vec::new();
+        $ (cmds.push(format!("{}, ", stringify!($cmd)));) *
+        let help_txt = format_help_txt(cmds);
+        println!("{}", help_txt);
         loop {
             let mut input = String::new();
             io::stdin()
                 .read_line(&mut input)
                 .expect("failed to read line");
             let input = format_input(input);
-            let mut cmds = Vec::new();
-            $ (cmds.push(format!("{}, ", stringify!($cmd)));) *
-            let help_txt = format_help_txt(cmds);
             if &input[..] == "help"{
                 println!("{}", help_txt);
+                println!("Type `help` followed by a command name to get info on that command.");
                 continue;
             } $(else if &input[..] == $cmd {
                 $result
