@@ -178,6 +178,14 @@ impl PlayerData {
                 return;
             }
         };
+        match arg {
+            ArgType::Character(num) => {
+                println!("As {}:", num_to_char(*num));
+            }
+            ArgType::Stage(num) => {
+                println!("On {}:", num_to_stage(*num));
+            }
+        }
         println!("{}", ws);
     }
 
@@ -204,6 +212,14 @@ impl PlayerData {
                 }
             }
         }
+        match arg {
+            ArgType::Character(num) => {
+                println!("As {}:", num_to_char(*num));
+            }
+            ArgType::Stage(num) => {
+                println!("On {}:", num_to_stage(*num));
+            }
+        }
         print_data(DataType::Opponents, &matchup_data);
     }
 
@@ -225,6 +241,7 @@ impl PlayerData {
                 }
             }
         }
+        println!("As {}", num_to_char(*char_num));
         print_data(DataType::Stages, &stage_data);
     }
 
@@ -246,6 +263,7 @@ impl PlayerData {
                 }
             }
         }
+        println!("On {}", num_to_stage(*stage_num));
         print_data(DataType::Characters, &char_data);
     }
 
@@ -281,6 +299,7 @@ impl PlayerData {
             }
         };
 
+        println!("{} vs. {}:", num_to_char(player), num_to_char(opponent));
         println!("{}", ws);
         print_data(DataType::Stages, &stage_data);
     }
