@@ -91,6 +91,9 @@ impl PlayerData {
         let mut count = 0;
         for entry in fs::read_dir(p).unwrap() {
             let path = entry.unwrap().path();
+            if path.extension().unwrap() != "slp" {
+                continue;
+            }
             let game_data = match GameData::get_game_data(&path, true) {
                 Ok(gd) => gd,
                 Err(e) => {
