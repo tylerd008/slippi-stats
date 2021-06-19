@@ -152,7 +152,6 @@ fn format_input(arg: String) -> String {
 fn format_help_txt(cmds: Vec<String>) -> String {
     let mut help_txt = String::from("The available commands are ");
     for i in 0..cmds.len() {
-        println!("cmd: {}", cmds[i]);
         if i == cmds.len() - 1 {
             help_txt.push_str("and ");
         }
