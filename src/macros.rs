@@ -32,6 +32,7 @@ macro_rules! command_loop {
             if $break_at_end{//this is so we can keep the main input loop running, while ending the others after a subcommand is ran
                 break;
             }
+            println!("{}", help_txt);//this is so the main input loop will have its commands reprinted after a loop, so the user is aware they've returned back to it
         }
     };
 }
