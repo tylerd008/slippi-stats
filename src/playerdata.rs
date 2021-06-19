@@ -232,7 +232,7 @@ impl PlayerData {
         let stage_num = match arg {
             ArgType::Stage(num) => num,
             ArgType::Character(_) => {
-                println!("This function only stage input."); //this should never run but i'll have something here to be safe
+                println!("This function only accepts stage input."); //this should never run but i'll have something here to be safe
                 return;
             }
         };
