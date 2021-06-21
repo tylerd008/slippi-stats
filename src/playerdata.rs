@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use indicatif::{HumanDuration, ProgressBar};
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
@@ -102,6 +102,11 @@ impl PlayerData {
         let total = count_replays(&p);
         let pb = ProgressBar::new(total);
         let start = Instant::now();
+        pb.set_style(
+            ProgressStyle::default_bar().template(
+                "[{elapsed_precise}] [{wide_bar:.green/white}] {pos}/{len} ({eta_precise})",
+            ),
+        );
         for entry in fs::read_dir(p).unwrap() {
             let path = entry.unwrap().path();
             if path.extension().unwrap() != "slp" {
