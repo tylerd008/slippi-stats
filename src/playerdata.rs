@@ -641,7 +641,7 @@ fn get_char(game: &Game, player: usize) -> Result<usize, GameParseError> {
     .character
     .0 as usize;
 
-    if char_num > 26 {
+    if char_num >= 26 {
         return Err(GameParseError::CorruptedCharData(char_num));
     }
     Ok(char_num)
