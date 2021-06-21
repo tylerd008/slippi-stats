@@ -540,7 +540,7 @@ fn print_fb(d_type: DataType, fb: FavBestData, data: Vec<(usize, usize)>) {
         data[fb.favorite].0
     );
     println!(
-        "{}: {} ({}% winrate)",
+        "{}: {} ({:.2}% winrate)",
         data_labels.1,
         data_func(fb.best),
         (data[fb.best].0 as f64 / data[fb.best].1 as f64) * 100.0
