@@ -1,7 +1,7 @@
 use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs;
-use std::fs::{DirEntry, File};
+use std::fs::File;
 use std::time::Instant;
 
 use chrono::{DateTime, Utc};
