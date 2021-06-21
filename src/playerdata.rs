@@ -110,7 +110,7 @@ impl PlayerData {
             let game_data = match GameData::get_game_data(&path, true) {
                 Ok(gd) => gd,
                 Err(e) => {
-                    println!("error {:?} when parsing game {:?}", e, path);
+                    pb.println(format!("error {:?} when parsing game {:?}", e, path));
                     continue;
                 }
             };
@@ -124,26 +124,26 @@ impl PlayerData {
             match GameData::has_player(&game_data, np_code.to_string()) {
                 Ok(has_player) => {
                     if !has_player {
-                        println!("Game does not contain player. Skipping.");
+                        pb.println(format!("Game does not contain player. Skipping."));
                         continue;
                     }
                 }
                 Err(e) => {
-                    println!("Error {:?}, when parsing game: {:?}", e, path);
+                    pb.println(format!("Error {:?}, when parsing game: {:?}", e, path));
                     continue;
                 }
             }
             let gamedata_with_frames = match GameData::get_game_data(&path, false) {
                 Ok(gd) => gd,
                 Err(e) => {
-                    println!("error {:?} when parsing game {:?}", e, path);
+                    pb.println(format!("error {:?} when parsing game {:?}", e, path));
                     continue;
                 }
             };
             let result = match GameData::parse_game(gamedata_with_frames, np_code.to_string()) {
                 Ok(g) => g,
                 Err(e) => {
-                    println!("Error when parsing game result: {:?}", e);
+                    pb.println(format!("Error when parsing game result: {:?}", e));
                     continue;
                 }
             };
