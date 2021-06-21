@@ -127,14 +127,14 @@ impl PlayerData {
                     continue;
                 }
             }
-            let gd_wf = match GameData::get_game_data(&path, false) {
+            let gamedata_with_frames = match GameData::get_game_data(&path, false) {
                 Ok(gd) => gd,
                 Err(e) => {
                     println!("error {:?} when parsing game {:?}", e, path);
                     continue;
                 }
             };
-            let result = match GameData::parse_game(gd_wf, np_code.to_string()) {
+            let result = match GameData::parse_game(gamedata_with_frames, np_code.to_string()) {
                 Ok(g) => g,
                 Err(e) => {
                     println!("Error when parsing game result: {:?}", e);
