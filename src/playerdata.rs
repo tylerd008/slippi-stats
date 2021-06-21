@@ -80,7 +80,7 @@ impl PlayerData {
     pub fn parse_dir(p: PathBuf, np_code: String) -> Result<Self, GameParseError> {
         let mut cache_path = String::from(p.as_path().to_str().unwrap());
         cache_path.push_str(&format!("/{}.cache", np_code));
-        let cache = match fs::read_to_string(&cache_path) {
+        let mut cache = match fs::read_to_string(&cache_path) {
             Ok(c) => c,
             Err(_) => "".to_string(),
         };
@@ -92,6 +92,7 @@ impl PlayerData {
         if results.cache_ver != PlayerData::CACHE_VER {
             println!("Cache detected but out of date. Rebuilding.");
             results = PlayerData::new();
+            cache = "".to_string(); //don't like having this here
         }
 
         let mut cached_count = 0;
