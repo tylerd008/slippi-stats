@@ -10,6 +10,7 @@ Do note that on a first run it will take some time before you can get to the inp
 
 ## Current Utilites
 Currently there are four main commands:
+- `player` - Commands for getting overall data for the player: `winrate`, `matchups`, `overview`.
 - `character` - Commands for getting stats of a certain character: `winrate`, `stages`, and `matchups`.
 - `stage` - Commands for data of a certain stage: `winrate`, `characters`, and `matchups`.
 - `matchup` - Gives data for a given matchup.
