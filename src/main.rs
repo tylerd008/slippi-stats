@@ -28,6 +28,7 @@ fn main() {
     };
     command_loop!(
         false,
+        "player", text::PLAYER_HELP_TEXT => player(&results),
         "character", text::CHARACTER_HELP_TEXT => character(&results),
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
@@ -35,6 +36,17 @@ fn main() {
         "end", text::END_HELP_TEXT => {
             break;
         }
+    );
+}
+
+fn player(data: &PlayerData) {
+    command_loop!(
+        true,
+        "winrate", text::PLACEHOLDER_TEXT => data.winrate(&ArgType::Player),
+        //"characters", text::PLACEHOLDER_TEXT => data.characters(), not sure how i want to implement these right now
+        //"stages", text::PLACEHOLDER_TEXT => data.stages(),
+        "matchups", text::PLACEHOLDER_TEXT => data.matchups(&ArgType::Player),
+        "overview", text::PLACEHOLDER_TEXT => data.overview()
     );
 }
 
@@ -105,7 +117,7 @@ fn char_loop() -> ArgType {
 
         character = match arg {
             ArgType::Character(num) => ArgType::Character(num),
-            ArgType::Stage(_) => {
+            _ => {
                 println!("Please input a character name.");
                 continue;
             }
@@ -133,7 +145,7 @@ fn stage_loop() -> ArgType {
 
         stage = match arg {
             ArgType::Stage(num) => ArgType::Stage(num),
-            ArgType::Character(_) => {
+            _ => {
                 println!("Please input a stage name.");
                 continue;
             }

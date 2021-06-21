@@ -53,12 +53,19 @@ pub enum GameParseError {
 pub enum ArgType {
     Stage(usize),
     Character(usize),
+    Player,
 }
 
 enum DataType {
     Stages,
     Characters,
     Opponents,
+}
+
+#[derive(Debug)]
+struct FavBestData {
+    favorite: usize, //(wins, total games)
+    best: usize,
 }
 
 impl PlayerData {
@@ -172,6 +179,12 @@ impl PlayerData {
                         }
                     }
                 }
+                ArgType::Player => {
+                    games += 1;
+                    if game.is_victory() {
+                        wins += 1;
+                    }
+                }
             }
         }
         let ws = match winrate_string(wins, games, true) {
@@ -187,6 +200,9 @@ impl PlayerData {
             }
             ArgType::Stage(num) => {
                 println!("On {}:", num_to_stage(*num));
+            }
+            ArgType::Player => {
+                println!("Overall:");
             }
         }
         println!("{}", ws);
@@ -213,6 +229,12 @@ impl PlayerData {
                         }
                     }
                 }
+                ArgType::Player => {
+                    matchup_data[game.opponent_char].1 += 1;
+                    if game.is_victory() {
+                        matchup_data[game.opponent_char].0 += 1;
+                    }
+                }
             }
         }
         match arg {
@@ -222,6 +244,9 @@ impl PlayerData {
             ArgType::Stage(num) => {
                 println!("On {}:", num_to_stage(*num));
             }
+            ArgType::Player => {
+                println!("Overall:");
+            }
         }
         print_data(DataType::Opponents, &matchup_data);
     }
@@ -229,7 +254,7 @@ impl PlayerData {
     pub fn stages(&self, arg: &ArgType) {
         let char_num = match arg {
             ArgType::Character(num) => num,
-            ArgType::Stage(_) => {
+            _ => {
                 println!("This function only accepts character input."); //this should never run but i'll have something here to be safe
                 return;
             }
@@ -251,7 +276,7 @@ impl PlayerData {
     pub fn characters(&self, arg: &ArgType) {
         let stage_num = match arg {
             ArgType::Stage(num) => num,
-            ArgType::Character(_) => {
+            _ => {
                 println!("This function only accepts stage input."); //this should never run but i'll have something here to be safe
                 return;
             }
@@ -314,6 +339,47 @@ impl PlayerData {
             println!("{}", self.results[i]);
             i += 1;
         }
+    }
+
+    pub fn overview(&self) {
+        let mut char_data: Vec<(usize, usize)> = vec![(0, 0); 26];
+        let mut opponent_data: Vec<(usize, usize)> = vec![(0, 0); 26];
+        let mut stage_data: Vec<(usize, usize)> = vec![(0, 0); 33];
+        for game in &self.results {
+            char_data[game.player_char].1 += 1;
+            opponent_data[game.opponent_char].1 += 1;
+            stage_data[game.stage].1 += 1;
+            if game.is_victory() {
+                char_data[game.player_char].0 += 1;
+                opponent_data[game.opponent_char].0 += 1;
+                stage_data[game.stage].0 += 1;
+            }
+        }
+        let char_fb = PlayerData::fav_best(&char_data);
+        let opponent_fb = PlayerData::fav_best(&opponent_data);
+        let stage_fb = PlayerData::fav_best(&stage_data);
+
+        print_fb(DataType::Characters, char_fb, char_data);
+        print_fb(DataType::Opponents, opponent_fb, opponent_data);
+        print_fb(DataType::Stages, stage_fb, stage_data);
+    }
+
+    fn fav_best(data: &Vec<(usize, usize)>) -> FavBestData {
+        let mut favorite = 0;
+        let mut best = 0;
+        let mut best_winrate = 0.0;
+        for i in 0..data.len() {
+            if data[i].1 > data[favorite].1 {
+                favorite = i;
+            }
+            let current_winrate = data[i].0 as f64 / data[i].1 as f64;
+            if (data[i].1 > 20) && (current_winrate > best_winrate) {
+                //min 20 games so things with 1 game and 1 win don't end up taking the spot
+                best = i;
+                best_winrate = current_winrate;
+            }
+        }
+        FavBestData { favorite, best }
     }
 }
 
@@ -453,6 +519,31 @@ fn print_data(data_type: DataType, data: &Vec<(usize, usize)>) {
     if !is_data {
         println!("No data for given input.");
     }
+}
+
+fn print_fb(d_type: DataType, fb: FavBestData, data: Vec<(usize, usize)>) {
+    let data_labels = match d_type {
+        DataType::Characters => ("Favorite character", "Best character"),
+        DataType::Opponents => ("Most common opponent", "Easiest opponent"),
+        DataType::Stages => ("Most played stage", "Best stage"),
+    };
+    let data_func = match d_type {
+        DataType::Characters => num_to_char,
+        DataType::Opponents => num_to_char,
+        DataType::Stages => num_to_stage,
+    };
+    println!(
+        "{}: {} ({} games)",
+        data_labels.0,
+        data_func(fb.favorite),
+        data[fb.favorite].0
+    );
+    println!(
+        "{}: {} ({}% winrate)",
+        data_labels.1,
+        data_func(fb.best),
+        (data[fb.best].0 as f64 / data[fb.best].1 as f64) * 100.0
+    );
 }
 
 fn winrate_string(wins: usize, games: usize, standalone: bool) -> Option<String> {
