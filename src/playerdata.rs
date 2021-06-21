@@ -1,7 +1,8 @@
 use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs;
-use std::fs::File;
+use std::fs::{DirEntry, File};
+use std::time::Instant;
 
 use chrono::{DateTime, Utc};
 use peppi::metadata::Player as PlayerMD;
@@ -10,6 +11,9 @@ use peppi::ParseError;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
+
+use indicatif::{HumanDuration, ProgressBar};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
     cache_ver: usize,
@@ -69,7 +73,7 @@ struct FavBestData {
 }
 
 impl PlayerData {
-    const CACHE_VER: usize = 2;
+    const CACHE_VER: usize = 7;
     pub fn new() -> Self {
         Self {
             results: Vec::new(),
@@ -95,8 +99,9 @@ impl PlayerData {
             cache = "".to_string(); //don't like having this here
         }
 
-        let mut cached_count = 0;
-        let mut count = 0;
+        let total = count_replays(&p);
+        let pb = ProgressBar::new(total);
+        let start = Instant::now();
         for entry in fs::read_dir(p).unwrap() {
             let path = entry.unwrap().path();
             if path.extension().unwrap() != "slp" {
@@ -112,7 +117,7 @@ impl PlayerData {
             let dt = serde_json::to_string(&game_data.metadata.date.unwrap()).unwrap();
             if cache.contains(&dt) {
                 //not sure what's better: this, or loading the deserialized data and then iterating through it and checking each gamedata
-                cached_count += 1;
+                pb.inc(1);
                 continue;
             }
 
@@ -143,14 +148,13 @@ impl PlayerData {
                 }
             };
             results.add_game(result);
-            count += 1;
-            if count % 50 == 0 {
-                println!("Processed game number: {}", count);
-            }
+            pb.inc(1);
         }
         let serial = serde_json::to_string(&results).unwrap();
         fs::write(cache_path, serial).unwrap();
-        println!("{} already cached", cached_count);
+        pb.finish();
+        let end = start.elapsed();
+        println!("{} replays scanned in {}", total, HumanDuration(end));
         Ok(results)
     }
 
@@ -654,6 +658,17 @@ fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GamePar
         Some(c) => Ok(&c.code),
         None => Err(GameParseError::CorruptedPlayerData),
     }
+}
+
+fn count_replays(path: &PathBuf) -> u64 {
+    let mut count = 0;
+    for entry in fs::read_dir(path).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().unwrap() == "slp" {
+            count += 1;
+        }
+    }
+    count
 }
 
 fn num_to_char(char_num: usize) -> String {
