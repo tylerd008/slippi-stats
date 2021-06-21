@@ -69,7 +69,7 @@ struct FavBestData {
 }
 
 impl PlayerData {
-    const CACHE_VER: usize = 1;
+    const CACHE_VER: usize = 2;
     pub fn new() -> Self {
         Self {
             results: Vec::new(),
