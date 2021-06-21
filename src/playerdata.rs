@@ -111,6 +111,7 @@ impl PlayerData {
                 Ok(gd) => gd,
                 Err(e) => {
                     pb.println(format!("error {:?} when parsing game {:?}", e, path));
+                    pb.inc(1);
                     continue;
                 }
             };
@@ -125,11 +126,13 @@ impl PlayerData {
                 Ok(has_player) => {
                     if !has_player {
                         pb.println(format!("Game does not contain player. Skipping."));
+                        pb.inc(1);
                         continue;
                     }
                 }
                 Err(e) => {
                     pb.println(format!("Error {:?}, when parsing game: {:?}", e, path));
+                    pb.inc(1);
                     continue;
                 }
             }
@@ -137,6 +140,7 @@ impl PlayerData {
                 Ok(gd) => gd,
                 Err(e) => {
                     pb.println(format!("error {:?} when parsing game {:?}", e, path));
+                    pb.inc(1);
                     continue;
                 }
             };
@@ -144,6 +148,7 @@ impl PlayerData {
                 Ok(g) => g,
                 Err(e) => {
                     pb.println(format!("Error when parsing game result: {:?}", e));
+                    pb.inc(1);
                     continue;
                 }
             };
