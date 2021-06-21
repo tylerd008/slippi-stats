@@ -110,7 +110,7 @@ impl PlayerData {
             };
             let dt = serde_json::to_string(&game_data.metadata.date.unwrap()).unwrap();
             if cache.contains(&dt) {
-                //not sure what's better: this, or loading the deserialed data and then iterating through it and checking each gamedata
+                //not sure what's better: this, or loading the deserialized data and then iterating through it and checking each gamedata
                 cached_count += 1;
                 continue;
             }
