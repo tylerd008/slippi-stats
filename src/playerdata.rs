@@ -167,7 +167,7 @@ impl PlayerData {
         }
         let serial = serde_json::to_string(&results).unwrap();
         fs::write(cache_path, serial).unwrap();
-        pb.finish();
+        pb.finish_and_clear();
         let end = start.elapsed();
         println!("{} replays scanned in {}", total, HumanDuration(end));
         Ok(results)
