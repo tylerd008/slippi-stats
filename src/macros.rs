@@ -37,33 +37,25 @@ macro_rules! command_loop {
     };
 }
 
-#[macro_export] //idk if this can work but it feels close so i'm just gonna leave it here for now and come back to it every now and then until i figure it out/give up
+#[macro_export]
 macro_rules! input_loop {
-    ($ ($name:ident),*) => {
-        $ (fn $name() -> ArgType{
-            let $name: ArgType = ArgType::Character(0);
-            loop {
-                let mut input = String::new();
-                io::stdin()
-                    .read_line(&mut input)
-                    .expect("failed to read line");
-                let arg = match parse_arg(&format_input(input)) {
-                    Some(a) => a,
-                    None => {
-                        println!("Unrecognized {}", stringify!($name));
-                        continue;
-                    }
-                };
-                let $name = match arg {
-                    ArgType::$name(num) => ArgType::$name(num),
-                    _ => {
-                        continue;
-                    }
-                };
-                break;
-            }
-            println!("{:?}", $name);
-            $name
-        })*
-    };
+    ($output:ty) => {{
+        let arg: $output;
+        loop {
+            let mut input = String::new();
+            io::stdin()
+                .read_line(&mut input)
+                .expect("failed to read line");
+            let input = &format_input(input);
+            arg = match input.parse() {
+                Ok(fs) => fs,
+                Err(_) => {
+                    println!("Unrecognized input!");
+                    continue;
+                }
+            };
+            break;
+        }
+        arg
+    }};
 }
