@@ -1,5 +1,4 @@
 mod input;
-mod macros;
 mod playerdata;
 mod text;
 
