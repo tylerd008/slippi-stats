@@ -101,7 +101,7 @@ impl PlayerData {
         if results.cache_ver != PlayerData::CACHE_VER {
             println!("Cache detected but out of date. Rebuilding.");
             results = PlayerData::new();
-            cache = "".to_string(); //don't like having this here
+            cache = "".to_string();
         }
 
         let total = count_replays(&p);
@@ -275,7 +275,7 @@ impl PlayerData {
         let char_num = match arg {
             ArgType::Character(num) => num,
             _ => {
-                println!("This function only accepts character input."); //this should never run but i'll have something here to be safe
+                println!("This function only accepts character input.");
                 return;
             }
         };
@@ -297,7 +297,7 @@ impl PlayerData {
         let stage_num = match arg {
             ArgType::Stage(num) => num,
             _ => {
-                println!("This function only accepts stage input."); //this should never run but i'll have something here to be safe
+                println!("This function only accepts stage input.");
                 return;
             }
         };
