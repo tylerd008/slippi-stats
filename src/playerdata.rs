@@ -54,13 +54,14 @@ pub enum GameParseError {
     PeppiError(ParseError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ArgType {
     Stage(usize),
     Character(usize),
     Player,
 }
 
+#[derive(Debug)]
 pub enum ArgTypeParseError {
     UnrecognizedInput,
 }

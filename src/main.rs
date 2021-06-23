@@ -1,6 +1,4 @@
-mod input;
-mod playerdata;
-mod text;
+use slippi_stats::input;
 
 fn main() {
     loop {
