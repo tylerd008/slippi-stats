@@ -1,8 +1,55 @@
 use crate::text;
 use crate::{command_loop, input_loop};
+use std::fmt;
+use std::fs;
 use std::io;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::playerdata::{ArgType, PlayerData};
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct NetplayCode {
+    name: String,
+    num: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct CacheLocation {
+    np_code: NetplayCode,
+    path: PathBuf,
+}
+
+enum NetplayCodeParseError {
+    InvalidCode,
+}
+
+pub fn load_data() -> PlayerData {
+    let cl = match fs::read_to_string("data.cache") {
+        Ok(c) => {
+            println!("Cache found, loading...");
+            serde_json::from_str(&c).unwrap()
+        }
+        Err(_) => input_data(),
+    };
+    PlayerData::parse_dir(cl.path, format!("{}", cl.np_code))
+}
+
+fn input_data() -> CacheLocation {
+    println!("Cache not found please input your np code:");
+    let np_code = input_loop!(NetplayCode);
+    println!("Enter the directory where your replays are stored:");
+    let path = input_loop!(PathBuf);
+    let cl = CacheLocation { np_code, path };
+    let serial = serde_json::to_string(&cl).unwrap();
+    match fs::write("data.cache", serial) {
+        Ok(_) => println!("Data saved."),
+        Err(e) => println!("Cache location could not be saved do to error `{:?}`", e),
+    };
+    cl
+}
 
 pub fn main_loop(results: PlayerData) {
     command_loop!(
@@ -111,6 +158,32 @@ fn format_help_txt(cmds: Vec<String>) -> String {
         help_txt.push_str(&cmds[i]);
     }
     help_txt
+}
+
+impl fmt::Display for NetplayCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}#{}", self.name, self.num)
+    }
+}
+
+impl FromStr for NetplayCode {
+    type Err = NetplayCodeParseError;
+    fn from_str(np_str: &str) -> Result<Self, Self::Err> {
+        if !np_str.contains("#") || np_str.len() != 8 {
+            return Err(NetplayCodeParseError::InvalidCode);
+        }
+        let v: Vec<&str> = np_str.split_terminator("#").collect();
+        let num: usize = match v[1].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                return Err(NetplayCodeParseError::InvalidCode);
+            }
+        };
+        Ok(Self {
+            name: v[0].to_string().to_uppercase(),
+            num,
+        })
+    }
 }
 
 #[macro_export]
