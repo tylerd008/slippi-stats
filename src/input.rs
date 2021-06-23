@@ -32,10 +32,7 @@ pub fn load_data() -> PlayerData {
             println!("Cache found, loading...");
             serde_json::from_str(&c).unwrap()
         }
-        Err(_) => {
-            println!("Cache not found!");
-            input_data()
-        }
+        Err(_) => input_data(),
     };
     PlayerData::parse_dir(cl.path, format!("{}", cl.np_code))
 }
@@ -54,7 +51,7 @@ fn input_data() -> CacheLocation {
     cl
 }
 
-pub fn main_loop(results: PlayerData) {
+pub fn main_loop(results: PlayerData) -> bool {
     command_loop!(
         false,
         "player", text::PLAYER_HELP_TEXT => player(&results),
@@ -62,11 +59,15 @@ pub fn main_loop(results: PlayerData) {
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
         "last", text::LAST_HELP_TEXT => last(&results),
-        "change cache", text::CHANGECACHE_HELP_TEXT => change_cache(),
+        "change cache", text::CHANGECACHE_HELP_TEXT => {
+            change_cache();
+            return false;
+        },
         "end", text::END_HELP_TEXT => {
             break;
         }
     );
+    return true;
 }
 
 fn change_cache() {
@@ -80,11 +81,11 @@ fn change_cache() {
             return;
         }
     }
-    let cl_new = input_data();
+    /* let cl_new = input_data();
     main_loop(PlayerData::parse_dir(
         cl_new.path,
         format!("{}", cl_new.np_code),
-    ));
+    )); */
 }
 
 fn player(data: &PlayerData) {
