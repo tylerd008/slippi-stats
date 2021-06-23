@@ -170,7 +170,7 @@ impl PlayerData {
         pb.finish_and_clear();
         let end = start.elapsed();
         println!("{} replays scanned in {}", total, HumanDuration(end));
-        Ok(results)
+        results
     }
 
     pub fn add_game(&mut self, game: GameData) {
