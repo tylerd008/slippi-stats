@@ -17,12 +17,6 @@ fn main() {
     let np_code = args.get(1).unwrap();
     let p = PathBuf::from(args.get(2).unwrap());
 
-    let results = match PlayerData::parse_dir(p, np_code.to_string()) {
-        Ok(r) => r,
-        Err(e) => {
-            println!("error {:?} parsing PlayerData", e);
-            return;
-        }
-    };
+    let results = PlayerData::parse_dir(p, np_code.to_string());
     input::main_loop(results);
 }

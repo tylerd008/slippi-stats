@@ -86,7 +86,7 @@ impl PlayerData {
         }
     }
 
-    pub fn parse_dir(p: PathBuf, np_code: String) -> Result<Self, GameParseError> {
+    pub fn parse_dir(p: PathBuf, np_code: String) -> Self {
         let mut cache_path = String::from(p.as_path().to_str().unwrap());
         cache_path.push_str(&format!("/{}.cache", np_code));
         let mut cache = match fs::read_to_string(&cache_path) {
