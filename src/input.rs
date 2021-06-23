@@ -32,13 +32,16 @@ pub fn load_data() -> PlayerData {
             println!("Cache found, loading...");
             serde_json::from_str(&c).unwrap()
         }
-        Err(_) => input_data(),
+        Err(_) => {
+            println!("Cache not found!");
+            input_data()
+        }
     };
     PlayerData::parse_dir(cl.path, format!("{}", cl.np_code))
 }
 
 fn input_data() -> CacheLocation {
-    println!("Cache not found please input your np code:");
+    println!("Please input your np code:");
     let np_code = input_loop!(NetplayCode);
     println!("Enter the directory where your replays are stored:");
     let path = input_loop!(PathBuf);
@@ -59,10 +62,29 @@ pub fn main_loop(results: PlayerData) {
         "stage", text::STAGE_HELP_TEXT => stage(&results),
         "matchup", text::MATCHUP_HELP_TEXT => matchup(&results),
         "last", text::LAST_HELP_TEXT => last(&results),
+        "change cache", text::CHANGECACHE_HELP_TEXT => change_cache(),
         "end", text::END_HELP_TEXT => {
             break;
         }
     );
+}
+
+fn change_cache() {
+    match fs::remove_file("data.cache") {
+        Ok(_) => println!("Prevous cache location removed."),
+        Err(e) => {
+            println!(
+                "Couldn't delete previous cache location data due to error `{:?}`",
+                e
+            );
+            return;
+        }
+    }
+    let cl_new = input_data();
+    main_loop(PlayerData::parse_dir(
+        cl_new.path,
+        format!("{}", cl_new.np_code),
+    ));
 }
 
 fn player(data: &PlayerData) {

@@ -4,6 +4,8 @@ pub const STAGE_HELP_TEXT: &str = "Gives commands for retrieving stats about a s
 pub const MATCHUP_HELP_TEXT: &str = "Commands for finding out stats regarding a given matchup.";
 pub const LAST_HELP_TEXT: &str = "Prints the results of the most recent specified number of games.";
 pub const PLAYER_HELP_TEXT: &str = "Commands for getting overall stats about the player.";
+pub const CHANGECACHE_HELP_TEXT: &str =
+    "Changes the location where replay data is being loaded from.";
 pub const END_HELP_TEXT: &str = "Ends the program.";
 
 pub const P_WINRATE_HELP_TEXT: &str = "Player's overall winrate.";
