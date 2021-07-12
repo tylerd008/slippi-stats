@@ -23,9 +23,9 @@ pub struct PlayerData {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameData {
-    player_char: usize,
+    pub player_char: usize,
     opponent_char: usize,
-    stage: usize,
+    pub stage: usize,
     match_result: MatchResult,
     timestamp: DateTime<Utc>,
 }
