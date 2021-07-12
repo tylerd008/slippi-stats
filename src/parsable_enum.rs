@@ -3,6 +3,10 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::str::FromStr;
 
+//these traits should probably be somewhere else but i'm not sure where yet
+pub trait Numbered {
+    const NUM_VALUES: usize;
+}
 pub trait Parsable: FromStr + Display + TryFrom<usize> {}
 pub trait UnnamedTrait {
     //name this

@@ -1,5 +1,6 @@
 use crate::gamedata::GameData;
 use crate::parsable_enum;
+use crate::parsable_enum::Numbered;
 use crate::parsable_enum::UnnamedTrait;
 
 parsable_enum! {
@@ -34,6 +35,10 @@ parsable_enum! {
         "Yoshi's Island N64"; "yoshi's island 64", "yi64", => YoshisIslandN64 = 29,
         "Kongo Jungle N64"; "kongo jungle 64", "kj64", => KongoJungleN64 = 30,
     }
+}
+
+impl Numbered for Stage {
+    const NUM_VALUES: usize = 33;
 }
 
 impl UnnamedTrait for Stage {
