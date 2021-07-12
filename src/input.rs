@@ -222,19 +222,21 @@ macro_rules! command_loop {
                 .read_line(&mut input)
                 .expect("failed to read line");
             let input = format_input(input);
-            if &input[..] == "help"{
-                println!("{}", help_txt);
-                println!("Type `help` followed by a command name to get info on that command.");
-                continue;
-            } $(else if &input[..] == $cmd {
-                $result
-            } else if &input[..] == &format!("help {}", $cmd){
-                println!("{}", $cmd_help_text);
-                continue;
-            })*
-            else {
-                println!("Unrecognized command.");
-                continue;
+            match &input[..]{
+	            $($cmd => $result,)*
+	            "help" => {
+		            println!("{}", help_txt);
+		            println!("Type `help` followed by another command to get more info on that command.");
+		            continue;
+		            },
+	            $(x if x == &format!("help {}", $cmd) => {
+		            println!("{}", $cmd_help_text);
+		            continue;
+		            },)*
+	            _ => {
+		            println!("Unrecognized command");
+		            continue;
+		        }
             }
             if $break_at_end{//this is so we can keep the main input loop running, while ending the others after a subcommand is ran
                 break;
