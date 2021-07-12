@@ -1,57 +1,20 @@
-use peppi::game::{Frames, Game, Port};
 use std::fmt;
 use std::fs;
-use std::fs::File;
 use std::str::FromStr;
 use std::time::Instant;
 
-use chrono::{DateTime, Utc};
-use peppi::metadata::Player as PlayerMD;
-use peppi::parse;
-use peppi::ParseError;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 
+use crate::gamedata::GameData;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
     cache_ver: usize,
     results: Vec<GameData>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GameData {
-    pub player_char: usize,
-    opponent_char: usize,
-    pub stage: usize,
-    match_result: MatchResult,
-    timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-enum MatchResult {
-    Victory(MatchEndType),
-    Loss(MatchEndType),
-    EarlyEnd(usize),
-    Tie,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-enum MatchEndType {
-    Stocks,
-    Timeout,
-}
-
-#[derive(Debug)]
-pub enum GameParseError {
-    CorruptedCharData(usize),
-    CorruptedStageData(usize),
-    CorruptedPlayerData,
-    EmptyCharData,
-    IncorrectPlayerCount,
-    PeppiError(ParseError),
 }
 
 #[derive(Debug, PartialEq)]
@@ -404,69 +367,6 @@ impl PlayerData {
     }
 }
 
-impl GameData {
-    pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
-        let player_num = match get_player_num(&game, np_code) {
-            Some(num) => num,
-            None => {
-                return Err(GameParseError::CorruptedPlayerData);
-            }
-        };
-        let match_result = match get_match_result(&game, player_num) {
-            Ok(game_res) => game_res,
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
-        let player_char = get_char(&game, player_num)?;
-        let opponent_char = get_char(&game, 1 - player_num)?;
-
-        let timestamp = game.metadata.date.unwrap();
-
-        let stage = game.start.stage.0 as usize;
-
-        if stage == 0 || stage == 1 || stage == 21 || stage > 32 {
-            return Err(GameParseError::CorruptedStageData(stage));
-        }
-
-        Ok(Self {
-            player_char,
-            opponent_char,
-            stage,
-            match_result,
-            timestamp,
-        })
-    }
-
-    pub fn get_game_data(path: &PathBuf, skip_frames: bool) -> Result<Game, GameParseError> {
-        match peppi::game(
-            &mut File::open(&path).unwrap(),
-            Some(parse::Opts { skip_frames }),
-        ) {
-            Ok(val) => Ok(val),
-            Err(e) => {
-                return Err(GameParseError::PeppiError(e));
-            }
-        }
-    }
-
-    pub fn has_player(game: &Game, np_code: String) -> Result<bool, GameParseError> {
-        let players = game.metadata.players.as_ref().unwrap();
-        let p1_np_code = get_np_code(&players, 0)?;
-        let p2_np_code = get_np_code(&players, 1)?;
-
-        Ok(p1_np_code == np_code || p2_np_code == np_code)
-    }
-
-    pub fn is_victory(&self) -> bool {
-        match self.match_result {
-            MatchResult::Victory(_) => true,
-            _ => false,
-        }
-    }
-}
-
 impl FromStr for ArgType {
     type Err = ArgTypeParseError;
     fn from_str(arg: &str) -> Result<Self, Self::Err> {
@@ -534,41 +434,6 @@ impl FromStr for ArgType {
             }
         };
         Ok(output)
-    }
-}
-
-impl fmt::Display for GameData {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} vs {} on {}. {}",
-            num_to_char(self.player_char),
-            num_to_char(self.opponent_char),
-            num_to_stage(self.stage),
-            self.match_result
-        )
-    }
-}
-
-impl fmt::Display for MatchResult {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            MatchResult::Victory(endtype) => write!(f, "Won by {}.", endtype),
-            MatchResult::Loss(endtype) => write!(f, "Lost by {}.", endtype),
-            MatchResult::EarlyEnd(player_num) => {
-                write!(f, "Match ended early by player {}.", player_num)
-            }
-            MatchResult::Tie => write!(f, "Ended in a tie."),
-        }
-    }
-}
-
-impl fmt::Display for MatchEndType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            MatchEndType::Stocks => write!(f, "stocks"),
-            MatchEndType::Timeout => write!(f, "timeout"),
-        }
     }
 }
 
@@ -655,97 +520,6 @@ fn winrate_string(wins: usize, games: usize, standalone: bool) -> Option<String>
         (wins as f64 / games as f64) * 100.0
     ))
 }
-
-fn get_player_num(game: &Game, np_code: String) -> Option<usize> {
-    let players = game.metadata.players.as_ref().unwrap();
-    let p2_md = players.get(1).unwrap();
-    let p2_np_code = match &p2_md.netplay {
-        Some(c) => &c.code,
-        None => {
-            return None;
-        }
-    };
-    if p2_np_code == &np_code {
-        Some(1)
-    } else {
-        Some(0)
-    }
-}
-
-fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameParseError> {
-    let frames = &game.frames;
-    let data = match frames {
-        Frames::P2(d) => d,
-        _ => {
-            return Err(GameParseError::IncorrectPlayerCount);
-        }
-    };
-    let pp_lf = &data[data.len() - 1].ports[player_num]; //player port last frame
-
-    let op_lf = &data[data.len() - 1].ports[1 - player_num]; //opponent port last frame
-
-    let p_end_stocks = pp_lf.leader.post.stocks;
-    let o_end_stocks = op_lf.leader.post.stocks;
-
-    let ev20 = game.end.v2_0.as_ref().unwrap();
-
-    if ev20.lras_initiator != None {
-        let port = ev20.lras_initiator.unwrap();
-        match port {
-            Port::P1 => {
-                return Ok(MatchResult::EarlyEnd(1));
-            }
-            Port::P2 => {
-                return Ok(MatchResult::EarlyEnd(2));
-            }
-            Port::P3 => {
-                return Ok(MatchResult::EarlyEnd(3));
-            }
-            Port::P4 => {
-                return Ok(MatchResult::EarlyEnd(4));
-            }
-        }
-    }
-
-    if p_end_stocks > o_end_stocks {
-        Ok(MatchResult::Victory(MatchEndType::Stocks))
-    } else if p_end_stocks < o_end_stocks {
-        Ok(MatchResult::Loss(MatchEndType::Stocks))
-    } else {
-        if pp_lf.leader.post.damage < op_lf.leader.post.damage {
-            Ok(MatchResult::Victory(MatchEndType::Timeout))
-        } else if pp_lf.leader.post.damage > op_lf.leader.post.damage {
-            Ok(MatchResult::Loss(MatchEndType::Timeout))
-        } else {
-            Ok(MatchResult::Tie)
-        }
-    }
-}
-
-fn get_char(game: &Game, player: usize) -> Result<usize, GameParseError> {
-    let char_num = match game.start.players.get(player) {
-        Some(character) => character,
-        None => {
-            return Err(GameParseError::EmptyCharData);
-        }
-    }
-    .character
-    .0 as usize;
-
-    if char_num >= 26 {
-        return Err(GameParseError::CorruptedCharData(char_num));
-    }
-    Ok(char_num)
-}
-
-fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GameParseError> {
-    let p_md = players.get(p_number).unwrap();
-    match &p_md.netplay {
-        Some(c) => Ok(&c.code),
-        None => Err(GameParseError::CorruptedPlayerData),
-    }
-}
-
 fn count_replays(path: &PathBuf) -> u64 {
     let mut count = 0;
     for entry in fs::read_dir(path).unwrap() {

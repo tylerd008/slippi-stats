@@ -1,4 +1,5 @@
 mod character;
+mod gamedata;
 pub mod input;
 mod parsable_enum;
 mod playerdata;

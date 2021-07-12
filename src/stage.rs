@@ -1,6 +1,6 @@
+use crate::gamedata::GameData;
 use crate::parsable_enum;
 use crate::parsable_enum::UnnamedTrait;
-use crate::playerdata::GameData;
 
 parsable_enum! {
     pub enum Stage {

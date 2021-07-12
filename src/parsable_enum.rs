@@ -1,4 +1,4 @@
-use crate::playerdata::GameData;
+use crate::gamedata::GameData;
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::str::FromStr;
