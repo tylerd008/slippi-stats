@@ -8,6 +8,8 @@ use std::str::FromStr;
 
 use crate::playerdata::{ArgType, PlayerData};
 
+use crate::character::Character;
+use crate::stage::Stage;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,43 +90,43 @@ fn change_cache() {
     )); */
 }
 
-fn player(data: &PlayerData) {
-    command_loop!(
+fn player(data: &PlayerData) { //not sure how i want to do this with the new framework
+    /* command_loop!(
         true,
         "winrate", text::P_WINRATE_HELP_TEXT => data.winrate(&ArgType::Player),
         //"characters", text::PLACEHOLDER_TEXT => data.characters(), not sure how i want to implement these right now
         //"stages", text::PLACEHOLDER_TEXT => data.stages(),
         "matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(&ArgType::Player),
         "overview", text::P_OVERVIEW_HELP_TEXT => data.overview()
-    );
+    ); */
 }
 
 fn character(data: &PlayerData) {
     println!("Input the name of a character.");
-    let character = char_loop();
+    let character = input_loop!(Character);
     command_loop!(
         true,
-        "winrate", text::C_WINRATE_HELP_TEXT => data.winrate(&character),
-        "stages", text::C_STAGES_HELP_TEXT => data.stages(&character),
-        "matchups", text::C_MATCHUPS_HELP_TEXT => data.matchups(&character)
+        "winrate", text::C_WINRATE_HELP_TEXT => data.winrate(character),
+        "stages", text::C_STAGES_HELP_TEXT => data.stages(character),
+        "matchups", text::C_MATCHUPS_HELP_TEXT => data.matchups(character)
     );
 }
 
 fn stage(data: &PlayerData) {
-    let stage = stage_loop();
+    let stage = input_loop!(Stage);
     command_loop!(
         true,
-        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(&stage),
-        "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(&stage),
-        "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(&stage)
+        "winrate", text::S_WINRATE_HELP_TEXT => data.winrate(stage),
+        "characters", text::S_CHARACTERS_HELP_TEXT => data.characters(stage),
+        "matchups", text::S_MATCHUPS_HELP_TEXT => data.matchups(stage)
     );
 }
 
 fn matchup(data: &PlayerData) {
     println!("Input player character:");
-    let player_char = char_loop();
+    let player_char = input_loop!(Character);
     println!("Input opponent character:");
-    let opponent_char = char_loop();
+    let opponent_char = input_loop!(Character);
     data.matchup(player_char, opponent_char);
 }
 
@@ -132,39 +134,6 @@ fn last(data: &PlayerData) {
     println!("Last how many games?");
     let num = input_loop!(usize);
     data.last(num);
-}
-
-fn char_loop() -> ArgType {
-    let character: ArgType;
-    loop {
-        let arg = input_loop!(ArgType);
-        character = match arg {
-            ArgType::Character(num) => ArgType::Character(num),
-            _ => {
-                println!("Please input a character name.");
-                continue;
-            }
-        };
-        break;
-    }
-    character
-}
-
-fn stage_loop() -> ArgType {
-    let stage: ArgType;
-    println!("Input the name of a stage.");
-    loop {
-        let arg = input_loop!(ArgType);
-        stage = match arg {
-            ArgType::Stage(num) => ArgType::Stage(num),
-            _ => {
-                println!("Please input a stage name.");
-                continue;
-            }
-        };
-        break;
-    }
-    stage
 }
 
 fn format_input(arg: String) -> String {
