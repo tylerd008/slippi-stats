@@ -15,8 +15,8 @@ pub trait UnnamedTrait {
 
 #[derive(Debug)]
 pub enum ParsableEnumError {
-    FromStrError,
-    TryFromError,
+    FromStrError(String),
+    TryFromError(usize),
 }
 
 #[macro_export]
@@ -38,7 +38,7 @@ macro_rules! parsable_enum {
                 match &(arg.to_string())[..]{
                     $(x if x == $disp_name.to_lowercase() => Ok($name::$val),
                     $($alias => Ok($name::$val),)*)*
-                _ => Err(ParsableEnumError::FromStrError)
+                _ => Err(ParsableEnumError::FromStrError(String::from(arg)))
                 }
             }
         }
@@ -48,7 +48,7 @@ macro_rules! parsable_enum {
             fn try_from(num: usize) -> Result<Self, Self::Error> {
                 match num {
                     $(x if x == $name::$val as usize => Ok($name::$val),)*
-                    _ => Err(ParsableEnumError::TryFromError)
+                    _ => Err(ParsableEnumError::TryFromError(num))
                 }
             }
         }
