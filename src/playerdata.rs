@@ -1,6 +1,5 @@
 use std::fmt;
 use std::fs;
-use std::str::FromStr;
 use std::time::Instant;
 
 use std::path::PathBuf;
@@ -14,8 +13,6 @@ use crate::gamedata::GameData;
 use crate::character::Character;
 use crate::stage::Stage;
 
-use std::convert::TryFrom;
-
 use std::fmt::Display;
 
 use crate::parsable_enum::{Numbered, Parsable, UnnamedTrait};
@@ -24,11 +21,6 @@ use crate::parsable_enum::{Numbered, Parsable, UnnamedTrait};
 pub struct PlayerData {
     cache_ver: usize,
     results: Vec<GameData>,
-}
-
-#[derive(Debug)]
-pub enum ArgTypeParseError {
-    UnrecognizedInput,
 }
 
 enum DataType {
@@ -112,7 +104,7 @@ where
 
     fn fav_best(&self) -> FavBestData {
         let mut favorite = 0;
-        let mut best = 0;
+        let mut best = 2; //default this to 0 because the way things are set up right now this causes issues with low game counts as stage 0 does not exist
         let mut best_winrate = 0.0;
         for i in 0..self.data.len() {
             if self.data[i].games > self.data[favorite].games {
@@ -278,7 +270,7 @@ impl PlayerData {
     }
 
     pub fn stages(&self, character: Character) {
-        let mut stage_data = WinLossVec::<Character>::new();
+        let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
             if character.condition(game) {
@@ -325,7 +317,7 @@ impl PlayerData {
     pub fn overview(&self) {
         let mut char_data = WinLossVec::<Character>::new();
         let mut opponent_data = WinLossVec::<Character>::new();
-        let mut stage_data = WinLossVec::<Character>::new();
+        let mut stage_data = WinLossVec::<Stage>::new();
         for game in &self.results {
             char_data.add_game(game.is_victory(), game.player_char);
             opponent_data.add_game(game.is_victory(), game.opponent_char);

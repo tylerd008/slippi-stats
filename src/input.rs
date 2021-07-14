@@ -6,7 +6,7 @@ use std::io;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use crate::playerdata::{ArgType, PlayerData};
+use crate::playerdata::PlayerData;
 
 use crate::character::Character;
 use crate::stage::Stage;
@@ -90,15 +90,16 @@ fn change_cache() {
     )); */
 }
 
-fn player(data: &PlayerData) { //not sure how i want to do this with the new framework
-    /* command_loop!(
+fn player(data: &PlayerData) {
+    //not sure how i want to do this with the new framework
+    command_loop!(
         true,
-        "winrate", text::P_WINRATE_HELP_TEXT => data.winrate(&ArgType::Player),
+        //"winrate", text::P_WINRATE_HELP_TEXT => data.winrate(&ArgType::Player),
         //"characters", text::PLACEHOLDER_TEXT => data.characters(), not sure how i want to implement these right now
         //"stages", text::PLACEHOLDER_TEXT => data.stages(),
-        "matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(&ArgType::Player),
+        //"matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(&ArgType::Player),
         "overview", text::P_OVERVIEW_HELP_TEXT => data.overview()
-    ); */
+    );
 }
 
 fn character(data: &PlayerData) {
