@@ -26,13 +26,6 @@ pub struct PlayerData {
     results: Vec<GameData>,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ArgType {
-    Stage(usize),
-    Character(usize),
-    Player,
-}
-
 #[derive(Debug)]
 pub enum ArgTypeParseError {
     UnrecognizedInput,
@@ -345,76 +338,6 @@ impl PlayerData {
     }
 }
 
-impl FromStr for ArgType {
-    type Err = ArgTypeParseError;
-    fn from_str(arg: &str) -> Result<Self, Self::Err> {
-        let output = match &(arg.to_string())[..] {
-            "captain falcon" | "falcon" => ArgType::Character(0),
-            "donkey kong" | "dk" => ArgType::Character(1),
-            "fox" => ArgType::Character(2),
-            "mr. game and watch" | "mr game and watch" | "game and watch" | "gnw" => {
-                ArgType::Character(3)
-            }
-            "kirby" => ArgType::Character(4),
-            "bowser" => ArgType::Character(5),
-            "link" => ArgType::Character(6),
-            "luigi" => ArgType::Character(7),
-            "mario" => ArgType::Character(8),
-            "marth" => ArgType::Character(9),
-            "mewtwo" => ArgType::Character(10),
-            "ness" => ArgType::Character(11),
-            "peach" => ArgType::Character(12),
-            "pikachu" => ArgType::Character(13),
-            "ice climbers" | "ics" | "ic" => ArgType::Character(14),
-            "jigglypuff" | "puff" => ArgType::Character(15),
-            "samus" => ArgType::Character(16),
-            "yoshi" => ArgType::Character(17),
-            "zelda" => ArgType::Character(18),
-            "sheik" => ArgType::Character(19),
-            "falco" => ArgType::Character(20),
-            "young link" | "yl" => ArgType::Character(21),
-            "dr. mario" | "dr mario" | "doc" => ArgType::Character(22),
-            "roy" => ArgType::Character(23),
-            "pichu" => ArgType::Character(24),
-            "ganondorf" | "ganon" => ArgType::Character(25),
-            "fountain of dreams" | "fountain" | "fod" => ArgType::Stage(2),
-            "pokémon stadium" | "pokemon stadium" | "pokemon" | "stadium" => ArgType::Stage(3),
-            "yoshi's story" | "yoshi's" | "ys" => ArgType::Stage(8),
-            "dream land n64" | "dream land" | "dreamland" | "dl" => ArgType::Stage(29),
-            "battlefield" | "bf" => ArgType::Stage(31),
-            "final destination" | "fd" => ArgType::Stage(32),
-            //rest of the stages included just for completeness' sake
-            "princess peach's castle" | "peach's castle" | "ppc" => ArgType::Stage(4),
-            "kongo jungle" | "kj" => ArgType::Stage(5),
-            "brinstar" => ArgType::Stage(6),
-            "corneria" => ArgType::Stage(7),
-            "onett" => ArgType::Stage(9),
-            "mute city" | "mc" => ArgType::Stage(10),
-            "rainbow cruise" | "rc" => ArgType::Stage(11),
-            "jungle japes" | "jj" => ArgType::Stage(12),
-            "great bay" | "gb" => ArgType::Stage(13),
-            "hyrule temple" | "temple" | "ht" => ArgType::Stage(14),
-            "brinstar depths" | "bd" => ArgType::Stage(15),
-            "yoshi's island" | "yi" => ArgType::Stage(16),
-            "green greens" | "gg" => ArgType::Stage(17),
-            "fourside" => ArgType::Stage(18),
-            "mushroom kingdom i" | "mushroom kingdom 1" | "mk1" => ArgType::Stage(19),
-            "mushroom kingdom ii" | "mushroom kingdom 2" | "mk2" => ArgType::Stage(20),
-            "venom" => ArgType::Stage(22),
-            "poké floats" | "poke floats" | "pf" => ArgType::Stage(23),
-            "big blue" | "bb" => ArgType::Stage(24),
-            "icicle mountain" | "im" => ArgType::Stage(25),
-            "flat zone" | "fz" => ArgType::Stage(27),
-            "yoshi's island n64" | "yoshi's island 64" | "yi64" => ArgType::Stage(29),
-            "kongo jungle n64" | "kongo jungle 64" | "kj64" => ArgType::Stage(30),
-            _ => {
-                return Err(ArgTypeParseError::UnrecognizedInput);
-            }
-        };
-        Ok(output)
-    }
-}
-
 impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -434,76 +357,4 @@ fn count_replays(path: &PathBuf) -> u64 {
         }
     }
     count
-}
-
-fn num_to_char(char_num: usize) -> String {
-    match char_num {
-        0 => String::from("Captain Falcon"),
-        1 => String::from("Donkey Kong"),
-        2 => String::from("Fox"),
-        3 => String::from("Mr. Game and Watch"),
-        4 => String::from("Kirby"),
-        5 => String::from("Bowser"),
-        6 => String::from("Link"),
-        7 => String::from("Luigi"),
-        8 => String::from("Mario"),
-        9 => String::from("Marth"),
-        10 => String::from("Mewtwo"),
-        11 => String::from("Ness"),
-        12 => String::from("Peach"),
-        13 => String::from("Pikachu"),
-        14 => String::from("Ice Climbers"),
-        15 => String::from("Jigglypuff"),
-        16 => String::from("Samus"),
-        17 => String::from("Yoshi"),
-        18 => String::from("Zelda"),
-        19 => String::from("Sheik"),
-        20 => String::from("Falco"),
-        21 => String::from("Young Link"),
-        22 => String::from("Dr. Mario"),
-        23 => String::from("Roy"),
-        24 => String::from("Pichu"),
-        25 => String::from("Ganondorf"),
-        _ => unreachable!(), //any other value is errored out before this fn is ever called
-    }
-}
-
-fn num_to_stage(stage_num: usize) -> String {
-    match stage_num {
-        //dummy results are so the function for printing data doesn't freak out
-        0 => String::from("dummy"),
-        1 => String::from("dummy"),
-        2 => String::from("Fountain of Dreams"),
-        3 => String::from("Pokémon Stadium"),
-        4 => String::from("Princess Peach's Castle"),
-        5 => String::from("Kongo Jungle"),
-        6 => String::from("Brinstar"),
-        7 => String::from("Corneria"),
-        8 => String::from("Yoshi's Story"),
-        9 => String::from("Onett"),
-        10 => String::from("Mute City"),
-        11 => String::from("Rainbow Cruise"),
-        12 => String::from("Jungle Japes"),
-        13 => String::from("Great Bay"),
-        14 => String::from("Hyrule Temple"),
-        15 => String::from("Brinstar Depths"),
-        16 => String::from("Yoshi's Island"),
-        17 => String::from("Green Greens"),
-        18 => String::from("Fourside"),
-        19 => String::from("Mushroom Kingdom I"),
-        20 => String::from("Mushroom Kingdom II"),
-        21 => String::from("dummy"),
-        22 => String::from("Venom"),
-        23 => String::from("Poké Floats"),
-        24 => String::from("Big Blue"),
-        25 => String::from("Icicle Mountain"),
-        26 => String::from("Icetop"), //?
-        27 => String::from("Flat Zone"),
-        28 => String::from("Dream Land N64"),
-        29 => String::from("Yoshi's Island N64"),
-        30 => String::from("Kongo Jungle N64"),
-        31 => String::from("Battlefield"),
-        32 => String::from("Final Destination"),
-        _ => unreachable!(), //any other value is errored out before this fn is ever called
-    }
 }
