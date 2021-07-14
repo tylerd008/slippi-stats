@@ -93,13 +93,12 @@ where
         self.data[elt_num].add_game(is_win)
     }
 
-    fn print_data(&self) {
-        for i in 0..self.data.len() {
-            if self.data[i].games == 0 {
-                continue;
-            }
-            println!("{}: {}", T::try_from(i).unwrap(), self.data[i]); //unwrap cause if the parser returns an error then something went wrong somewhere else
+    fn is_empty(&self) -> bool {
+        let mut tot_games = 0;
+        for asdf in &self.data {
+            tot_games += asdf.games;
         }
+        tot_games == 0
     }
 
     fn fav_best(&self) -> FavBestData {
@@ -139,6 +138,26 @@ where
             parser(fb.best).unwrap(),
             self.data[fb.best].winrate()
         );
+    }
+}
+
+impl<T: Parsable + Numbered> Display for WinLossVec<T>
+where
+    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_empty() {
+            return write!(f, "No data for given input.");
+        }
+        let mut output = String::from("");
+        for i in 0..self.data.len() {
+            if self.data[i].games == 0 {
+                continue;
+            }
+            output.push_str(&format!("{}: {}\n", T::try_from(i).unwrap(), self.data[i]));
+            //unwrap cause if the parser returns an error then something went wrong somewhere else
+        }
+        write!(f, "{}", output)
     }
 }
 
@@ -250,8 +269,7 @@ impl PlayerData {
                 win_loss_data.add_game(game.is_victory());
             }
         }
-        println!("{}:", arg);
-        println!("{}", win_loss_data);
+        println!("{}:\n{}", arg, win_loss_data);
     }
 
     pub fn matchups<T: UnnamedTrait + Parsable + Numbered>(&self, arg: T)
@@ -265,8 +283,7 @@ impl PlayerData {
                 matchup_data.add_game(game.is_victory(), game.opponent_char);
             }
         }
-        println!("{}:", arg);
-        matchup_data.print_data();
+        println!("{}:\n{}", arg, matchup_data);
     }
 
     pub fn stages(&self, character: Character) {
@@ -277,8 +294,7 @@ impl PlayerData {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
-        println!("As {}:", character);
-        stage_data.print_data();
+        println!("As {}:\n{}", character, stage_data);
     }
 
     pub fn characters(&self, stage: Stage) {
@@ -289,8 +305,7 @@ impl PlayerData {
                 char_data.add_game(game.is_victory(), game.player_char);
             }
         }
-        println!("On {}", stage);
-        char_data.print_data();
+        println!("On {}:\n{}", stage, char_data);
     }
 
     pub fn matchup(&self, player: Character, opponent: Character) {
@@ -301,8 +316,7 @@ impl PlayerData {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
-        println!("{} vs. {}:", player, opponent);
-        stage_data.print_data();
+        println!("{} vs. {}:\n{}", player, opponent, stage_data);
     }
 
     pub fn last(&self, num_games: usize) {
