@@ -13,11 +13,18 @@ pub trait UnnamedTrait {
     fn condition(&self, game: &GameData) -> bool; //come up with more descriptive name
 }
 
+#[derive(Debug)]
+pub enum ParsableEnumError {
+    FromStrError,
+    TryFromError,
+}
+
 #[macro_export]
 macro_rules! parsable_enum {
     ($vis:vis enum $name:ident{
         $($disp_name:literal; $($alias:literal,)* => $val:ident = $num_val:expr,)*
     }) => {
+        use crate::parsable_enum::ParsableEnumError;
         #[derive(Clone, Copy, Debug, PartialEq)]
         $vis enum $name {
             $($val = $num_val,)*
@@ -26,22 +33,22 @@ macro_rules! parsable_enum {
         impl crate::parsable_enum::Parsable for $name{}
 
         impl std::str::FromStr for $name {
-            type Err = ();
+            type Err = ParsableEnumError;
             fn from_str(arg: &str) -> Result<Self, Self::Err> {
                 match &(arg.to_string())[..]{
                     $(x if x == $disp_name.to_lowercase() => Ok($name::$val),
                     $($alias => Ok($name::$val),)*)*
-                _ => Err(())
+                _ => Err(ParsableEnumError::FromStrError)
                 }
             }
         }
 
         impl std::convert::TryFrom<usize> for $name{
-            type Error = ();
+            type Error = ParsableEnumError;
             fn try_from(num: usize) -> Result<Self, Self::Error> {
                 match num {
                     $(x if x == $name::$val as usize => Ok($name::$val),)*
-                    _ => Err(())
+                    _ => Err(ParsableEnumError::TryFromError)
                 }
             }
         }
