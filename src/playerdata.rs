@@ -11,6 +11,15 @@ use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 
 use crate::gamedata::GameData;
 
+use crate::character::Character;
+use crate::stage::Stage;
+
+use std::convert::TryFrom;
+
+use std::fmt::Display;
+
+use crate::parsable_enum::{Numbered, Parsable, UnnamedTrait};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
     cache_ver: usize,
@@ -39,6 +48,113 @@ enum DataType {
 struct FavBestData {
     favorite: usize, //(wins, total games)
     best: usize,
+}
+
+#[derive(Clone)]
+struct WinLossData {
+    games: usize,
+    wins: usize,
+}
+
+struct WinLossVec<T: Parsable + Numbered>
+where
+    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+{
+    data: Vec<WinLossData>,
+    parser: fn(usize) -> Result<T, T::Error>,
+}
+
+impl WinLossData {
+    fn new() -> WinLossData {
+        Self { games: 0, wins: 0 }
+    }
+
+    fn add_game(&mut self, is_win: bool) {
+        self.games += 1;
+        if is_win {
+            self.wins += 1;
+        }
+    }
+
+    fn winrate(&self) -> f64 {
+        (self.wins as f64) / (self.games as f64) * 100.0
+    }
+}
+
+impl Display for WinLossData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Won {} of {} games. ({:.2}%).",
+            self.wins,
+            self.games,
+            self.winrate()
+        )
+    }
+}
+
+impl<T: Parsable + Numbered> WinLossVec<T>
+where
+    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+{
+    fn new() -> Self {
+        Self {
+            data: vec![WinLossData::new(); T::NUM_VALUES],
+            parser: T::try_from,
+        }
+    }
+
+    fn add_game(&mut self, is_win: bool, elt_num: usize) {
+        self.data[elt_num].add_game(is_win)
+    }
+
+    fn print_data(&self) {
+        for i in 0..self.data.len() {
+            if self.data[i].games == 0 {
+                continue;
+            }
+            println!("{}: {}", T::try_from(i).unwrap(), self.data[i]); //unwrap cause if the parser returns an error then something went wrong somewhere else
+        }
+    }
+
+    fn fav_best(&self) -> FavBestData {
+        let mut favorite = 0;
+        let mut best = 0;
+        let mut best_winrate = 0.0;
+        for i in 0..self.data.len() {
+            if self.data[i].games > self.data[favorite].games {
+                favorite = i;
+            }
+            let current_winrate = self.data[i].winrate();
+            if (self.data[i].games > 20) && (current_winrate > best_winrate) {
+                //min 20 games so things with 1 game and 1 win don't end up taking the spot (will change this to be percent based once I decide on an appropriate percent)
+                best = i;
+                best_winrate = current_winrate;
+            }
+        }
+        FavBestData { favorite, best }
+    }
+
+    fn print_fb_data(&self, d_type: DataType, fb: FavBestData) {
+        let data_labels = match d_type {
+            DataType::Characters => ("Favorite character", "Best character"),
+            DataType::Opponents => ("Most common opponent", "Easiest opponent"),
+            DataType::Stages => ("Most played stage", "Best stage"),
+        };
+        let parser = self.parser;
+        println!(
+            "{}: {} ({} games)",
+            data_labels.0,
+            parser(fb.favorite).unwrap(),
+            self.data[fb.favorite].games
+        );
+        println!(
+            "{}: {} ({:.2}% winrate)",
+            data_labels.1,
+            parser(fb.best).unwrap(),
+            self.data[fb.best].winrate()
+        );
+    }
 }
 
 impl PlayerData {
@@ -141,179 +257,67 @@ impl PlayerData {
         self.results.push(game);
     }
 
-    pub fn winrate(&self, arg: &ArgType) {
-        let mut games = 0;
-        let mut wins = 0;
+    pub fn winrate<T: UnnamedTrait + fmt::Display>(&self, arg: T) {
+        let mut win_loss_data = WinLossData::new();
 
         for game in &self.results {
-            match arg {
-                ArgType::Character(num) => {
-                    if &game.player_char == num {
-                        games += 1;
-                        if game.is_victory() {
-                            wins += 1;
-                        }
-                    }
-                }
-                ArgType::Stage(num) => {
-                    if &game.stage == num {
-                        games += 1;
-                        if game.is_victory() {
-                            wins += 1;
-                        }
-                    }
-                }
-                ArgType::Player => {
-                    games += 1;
-                    if game.is_victory() {
-                        wins += 1;
-                    }
-                }
+            if arg.condition(game) {
+                win_loss_data.add_game(game.is_victory());
             }
         }
-        let ws = match winrate_string(wins, games, true) {
-            Some(s) => s,
-            None => {
-                println!("No data for given input");
-                return;
-            }
-        };
-        match arg {
-            ArgType::Character(num) => {
-                println!("As {}:", num_to_char(*num));
-            }
-            ArgType::Stage(num) => {
-                println!("On {}:", num_to_stage(*num));
-            }
-            ArgType::Player => {
-                println!("Overall:");
-            }
-        }
-        println!("{}", ws);
+        println!("{}:", arg);
+        println!("{}", win_loss_data);
     }
 
-    pub fn matchups(&self, arg: &ArgType) {
-        let mut matchup_data: Vec<(usize, usize)> = vec![(0, 0); 26];
+    pub fn matchups<T: UnnamedTrait + Parsable + Numbered>(&self, arg: T)
+    where
+        <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+    {
+        let mut matchup_data = WinLossVec::<T>::new();
 
         for game in &self.results {
-            match arg {
-                ArgType::Character(num) => {
-                    if &game.player_char == num {
-                        matchup_data[game.opponent_char].1 += 1;
-                        if game.is_victory() {
-                            matchup_data[game.opponent_char].0 += 1;
-                        }
-                    }
-                }
-                ArgType::Stage(num) => {
-                    if &game.stage == num {
-                        matchup_data[game.opponent_char].1 += 1;
-                        if game.is_victory() {
-                            matchup_data[game.opponent_char].0 += 1;
-                        }
-                    }
-                }
-                ArgType::Player => {
-                    matchup_data[game.opponent_char].1 += 1;
-                    if game.is_victory() {
-                        matchup_data[game.opponent_char].0 += 1;
-                    }
-                }
+            if arg.condition(game) {
+                matchup_data.add_game(game.is_victory(), game.opponent_char);
             }
         }
-        match arg {
-            ArgType::Character(num) => {
-                println!("As {}:", num_to_char(*num));
-            }
-            ArgType::Stage(num) => {
-                println!("On {}:", num_to_stage(*num));
-            }
-            ArgType::Player => {
-                println!("Overall:");
-            }
-        }
-        print_data(DataType::Opponents, &matchup_data);
+        println!("{}:", arg);
+        matchup_data.print_data();
     }
 
-    pub fn stages(&self, arg: &ArgType) {
-        let char_num = match arg {
-            ArgType::Character(num) => num,
-            _ => {
-                println!("This function only accepts character input.");
-                return;
-            }
-        };
-        let mut stage_data: Vec<(usize, usize)> = vec![(0, 0); 33];
+    pub fn stages(&self, character: Character) {
+        let mut stage_data = WinLossVec::<Character>::new();
 
         for game in &self.results {
-            if &game.player_char == char_num {
-                stage_data[game.stage].1 += 1;
-                if game.is_victory() {
-                    stage_data[game.stage].0 += 1;
-                }
+            if character.condition(game) {
+                stage_data.add_game(game.is_victory(), game.stage);
             }
         }
-        println!("As {}", num_to_char(*char_num));
-        print_data(DataType::Stages, &stage_data);
+        println!("As {}:", character);
+        stage_data.print_data();
     }
 
-    pub fn characters(&self, arg: &ArgType) {
-        let stage_num = match arg {
-            ArgType::Stage(num) => num,
-            _ => {
-                println!("This function only accepts stage input.");
-                return;
-            }
-        };
-        let mut char_data: Vec<(usize, usize)> = vec![(0, 0); 36];
+    pub fn characters(&self, stage: Stage) {
+        let mut char_data = WinLossVec::<Character>::new();
 
         for game in &self.results {
-            if &game.stage == stage_num {
-                char_data[game.player_char].1 += 1;
-                if game.is_victory() {
-                    char_data[game.player_char].0 += 1;
-                }
+            if stage.condition(game) {
+                char_data.add_game(game.is_victory(), game.player_char);
             }
         }
-        println!("On {}", num_to_stage(*stage_num));
-        print_data(DataType::Characters, &char_data);
+        println!("On {}", stage);
+        char_data.print_data();
     }
 
-    pub fn matchup(&self, player: ArgType, opponent: ArgType) {
-        let player = match player {
-            ArgType::Character(num) => num,
-            _ => unreachable!(),
-        };
-
-        let opponent = match opponent {
-            ArgType::Character(num) => num,
-            _ => unreachable!(),
-        };
-        let mut games = 0;
-        let mut wins = 0;
-        let mut stage_data = vec![(0, 0); 33];
+    pub fn matchup(&self, player: Character, opponent: Character) {
+        let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if game.player_char == player && game.opponent_char == opponent {
-                games += 1;
-                stage_data[game.stage].1 += 1;
-                if game.is_victory() {
-                    wins += 1;
-                    stage_data[game.stage].0 += 1;
-                }
+            if player.condition(game) && opponent.condition(game) {
+                stage_data.add_game(game.is_victory(), game.stage);
             }
         }
-        let ws = match winrate_string(wins, games, true) {
-            Some(s) => s,
-            None => {
-                println!("No data for given input");
-                return;
-            }
-        };
-
-        println!("{} vs. {}:", num_to_char(player), num_to_char(opponent));
-        println!("{}", ws);
-        print_data(DataType::Stages, &stage_data);
+        println!("{} vs. {}:", player, opponent);
+        stage_data.print_data();
     }
 
     pub fn last(&self, num_games: usize) {
@@ -326,44 +330,18 @@ impl PlayerData {
     }
 
     pub fn overview(&self) {
-        let mut char_data: Vec<(usize, usize)> = vec![(0, 0); 26];
-        let mut opponent_data: Vec<(usize, usize)> = vec![(0, 0); 26];
-        let mut stage_data: Vec<(usize, usize)> = vec![(0, 0); 33];
+        let mut char_data = WinLossVec::<Character>::new();
+        let mut opponent_data = WinLossVec::<Character>::new();
+        let mut stage_data = WinLossVec::<Character>::new();
         for game in &self.results {
-            char_data[game.player_char].1 += 1;
-            opponent_data[game.opponent_char].1 += 1;
-            stage_data[game.stage].1 += 1;
-            if game.is_victory() {
-                char_data[game.player_char].0 += 1;
-                opponent_data[game.opponent_char].0 += 1;
-                stage_data[game.stage].0 += 1;
-            }
+            char_data.add_game(game.is_victory(), game.player_char);
+            opponent_data.add_game(game.is_victory(), game.opponent_char);
+            stage_data.add_game(game.is_victory(), game.stage);
         }
-        let char_fb = PlayerData::fav_best(&char_data);
-        let opponent_fb = PlayerData::fav_best(&opponent_data);
-        let stage_fb = PlayerData::fav_best(&stage_data);
 
-        print_fb(DataType::Characters, char_fb, char_data);
-        print_fb(DataType::Opponents, opponent_fb, opponent_data);
-        print_fb(DataType::Stages, stage_fb, stage_data);
-    }
-
-    fn fav_best(data: &Vec<(usize, usize)>) -> FavBestData {
-        let mut favorite = 0;
-        let mut best = 0;
-        let mut best_winrate = 0.0;
-        for i in 0..data.len() {
-            if data[i].1 > data[favorite].1 {
-                favorite = i;
-            }
-            let current_winrate = data[i].0 as f64 / data[i].1 as f64;
-            if (data[i].1 > 20) && (current_winrate > best_winrate) {
-                //min 20 games so things with 1 game and 1 win don't end up taking the spot
-                best = i;
-                best_winrate = current_winrate;
-            }
-        }
-        FavBestData { favorite, best }
+        char_data.print_fb_data(DataType::Characters, char_data.fav_best());
+        opponent_data.print_fb_data(DataType::Opponents, opponent_data.fav_best());
+        stage_data.print_fb_data(DataType::Stages, stage_data.fav_best());
     }
 }
 
@@ -447,79 +425,6 @@ impl fmt::Display for DataType {
     }
 }
 
-impl DataType {
-    fn parse(&self, data_label: usize) -> String {
-        match self {
-            DataType::Stages => num_to_stage(data_label),
-            DataType::Characters => num_to_char(data_label),
-            DataType::Opponents => num_to_char(data_label),
-        }
-    }
-}
-
-fn print_data(data_type: DataType, data: &Vec<(usize, usize)>) {
-    let mut is_data = false;
-    for i in 0..data.len() {
-        let ws = match winrate_string(data[i].0, data[i].1, false) {
-            Some(s) => {
-                is_data = true;
-                s
-            }
-            None => {
-                continue;
-            }
-        };
-
-        println!("{} {} {}", data_type, data_type.parse(i), ws);
-    }
-    if !is_data {
-        println!("No data for given input.");
-    }
-}
-
-fn print_fb(d_type: DataType, fb: FavBestData, data: Vec<(usize, usize)>) {
-    let data_labels = match d_type {
-        DataType::Characters => ("Favorite character", "Best character"),
-        DataType::Opponents => ("Most common opponent", "Easiest opponent"),
-        DataType::Stages => ("Most played stage", "Best stage"),
-    };
-    let data_func = match d_type {
-        DataType::Characters => num_to_char,
-        DataType::Opponents => num_to_char,
-        DataType::Stages => num_to_stage,
-    };
-    println!(
-        "{}: {} ({} games)",
-        data_labels.0,
-        data_func(fb.favorite),
-        data[fb.favorite].0
-    );
-    println!(
-        "{}: {} ({:.2}% winrate)",
-        data_labels.1,
-        data_func(fb.best),
-        (data[fb.best].0 as f64 / data[fb.best].1 as f64) * 100.0
-    );
-}
-
-fn winrate_string(wins: usize, games: usize, standalone: bool) -> Option<String> {
-    if games == 0 {
-        return None;
-    }
-    let prefix: String;
-    if standalone {
-        prefix = String::from("Won");
-    } else {
-        prefix = String::from("won");
-    }
-    Some(format!(
-        "{} {} of {} games ({:.2}%).",
-        prefix,
-        wins,
-        games,
-        (wins as f64 / games as f64) * 100.0
-    ))
-}
 fn count_replays(path: &PathBuf) -> u64 {
     let mut count = 0;
     for entry in fs::read_dir(path).unwrap() {
