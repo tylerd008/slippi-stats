@@ -41,9 +41,11 @@ struct WinLossData {
     wins: usize,
 }
 
+type AssociatedTryFromError<T> = <T as std::convert::TryFrom<usize>>::Error;
+
 struct WinLossVec<T: Parsable + Numbered>
 where
-    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+    AssociatedTryFromError<T>: std::fmt::Debug,
 {
     data: Vec<WinLossData>,
     parser: fn(usize) -> Result<T, T::Error>,
@@ -80,7 +82,7 @@ impl Display for WinLossData {
 
 impl<T: Parsable + Numbered> WinLossVec<T>
 where
-    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+    AssociatedTryFromError<T>: std::fmt::Debug,
 {
     fn new() -> Self {
         Self {
@@ -143,7 +145,7 @@ where
 
 impl<T: Parsable + Numbered> Display for WinLossVec<T>
 where
-    <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+    AssociatedTryFromError<T>: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.is_empty() {
@@ -274,7 +276,7 @@ impl PlayerData {
 
     pub fn matchups<T: UnnamedTrait + Parsable + Numbered>(&self, arg: T)
     where
-        <T as std::convert::TryFrom<usize>>::Error: std::fmt::Debug,
+        AssociatedTryFromError<T>: std::fmt::Debug,
     {
         let mut matchup_data = WinLossVec::<T>::new();
 
