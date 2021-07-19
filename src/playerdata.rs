@@ -314,7 +314,7 @@ impl PlayerData {
         let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if player.game_data_condition(game) && opponent.game_data_condition(game) {
+            if game.player_char == player as usize && game.opponent_char == opponent as usize {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
