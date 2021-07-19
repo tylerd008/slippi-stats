@@ -9,7 +9,7 @@ pub trait Numbered {
 }
 pub trait Parsable: FromStr + Display + TryFrom<usize> {}
 pub trait GameDataCondition {
-    fn condition(&self, game: &GameData) -> bool; //come up with more descriptive name
+    fn game_data_condition(&self, game: &GameData) -> bool;
 }
 
 #[derive(Debug)]

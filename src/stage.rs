@@ -42,7 +42,7 @@ impl Numbered for Stage {
 }
 
 impl GameDataCondition for Stage {
-    fn condition(&self, game: &GameData) -> bool {
+    fn game_data_condition(&self, game: &GameData) -> bool {
         game.stage == *self as usize
     }
 }

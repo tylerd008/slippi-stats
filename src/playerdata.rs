@@ -267,7 +267,7 @@ impl PlayerData {
         let mut win_loss_data = WinLossData::new();
 
         for game in &self.results {
-            if arg.condition(game) {
+            if arg.game_data_condition(game) {
                 win_loss_data.add_game(game.is_victory());
             }
         }
@@ -281,7 +281,7 @@ impl PlayerData {
         let mut matchup_data = WinLossVec::<T>::new();
 
         for game in &self.results {
-            if arg.condition(game) {
+            if arg.game_data_condition(game) {
                 matchup_data.add_game(game.is_victory(), game.opponent_char);
             }
         }
@@ -292,7 +292,7 @@ impl PlayerData {
         let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if character.condition(game) {
+            if character.game_data_condition(game) {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
@@ -303,7 +303,7 @@ impl PlayerData {
         let mut char_data = WinLossVec::<Character>::new();
 
         for game in &self.results {
-            if stage.condition(game) {
+            if stage.game_data_condition(game) {
                 char_data.add_game(game.is_victory(), game.player_char);
             }
         }
@@ -314,7 +314,7 @@ impl PlayerData {
         let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if player.condition(game) && opponent.condition(game) {
+            if player.game_data_condition(game) && opponent.game_data_condition(game) {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
