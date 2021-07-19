@@ -1,7 +1,7 @@
 use crate::gamedata::GameData;
 use crate::parsable_enum;
+use crate::parsable_enum::GameDataCondition;
 use crate::parsable_enum::Numbered;
-use crate::parsable_enum::UnnamedTrait;
 
 parsable_enum! {
     pub enum Stage {
@@ -41,7 +41,7 @@ impl Numbered for Stage {
     const NUM_VALUES: usize = 33;
 }
 
-impl UnnamedTrait for Stage {
+impl GameDataCondition for Stage {
     fn condition(&self, game: &GameData) -> bool {
         game.stage == *self as usize
     }

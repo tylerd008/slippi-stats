@@ -15,7 +15,7 @@ use crate::stage::Stage;
 
 use std::fmt::Display;
 
-use crate::parsable_enum::{Numbered, Parsable, UnnamedTrait};
+use crate::parsable_enum::{GameDataCondition, Numbered, Parsable};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
@@ -263,7 +263,7 @@ impl PlayerData {
         self.results.push(game);
     }
 
-    pub fn winrate<T: UnnamedTrait + fmt::Display>(&self, arg: T) {
+    pub fn winrate<T: GameDataCondition + fmt::Display>(&self, arg: T) {
         let mut win_loss_data = WinLossData::new();
 
         for game in &self.results {
@@ -274,7 +274,7 @@ impl PlayerData {
         println!("{}:\n{}", arg, win_loss_data);
     }
 
-    pub fn matchups<T: UnnamedTrait + Parsable + Numbered>(&self, arg: T)
+    pub fn matchups<T: GameDataCondition + Parsable + Numbered>(&self, arg: T)
     where
         AssociatedTryFromError<T>: std::fmt::Debug,
     {

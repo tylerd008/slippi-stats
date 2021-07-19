@@ -1,7 +1,7 @@
 use crate::gamedata::GameData;
 use crate::parsable_enum;
+use crate::parsable_enum::GameDataCondition;
 use crate::parsable_enum::Numbered;
-use crate::parsable_enum::UnnamedTrait;
 parsable_enum! {
     pub enum Character {
         "Captain Falcon"; "falcon", => CaptainFalcon = 0,
@@ -37,7 +37,7 @@ impl Numbered for Character {
     const NUM_VALUES: usize = 26;
 }
 
-impl UnnamedTrait for Character {
+impl GameDataCondition for Character {
     fn condition(&self, game: &GameData) -> bool {
         game.player_char == *self as usize
     }

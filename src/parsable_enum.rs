@@ -8,8 +8,7 @@ pub trait Numbered {
     const NUM_VALUES: usize;
 }
 pub trait Parsable: FromStr + Display + TryFrom<usize> {}
-pub trait UnnamedTrait {
-    //name this
+pub trait GameDataCondition {
     fn condition(&self, game: &GameData) -> bool; //come up with more descriptive name
 }
 
