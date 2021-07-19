@@ -207,7 +207,7 @@ impl PlayerData {
             let game_data = match GameData::get_game_data(&path, true) {
                 Ok(gd) => gd,
                 Err(e) => {
-                    pb.println(format!("error {:?} when parsing game {:?}", e, path));
+                    pb.println(format!("Error {:?} when parsing game {:?}", e, path));
                     pb.inc(1);
                     continue;
                 }
@@ -236,7 +236,7 @@ impl PlayerData {
             let gamedata_with_frames = match GameData::get_game_data(&path, false) {
                 Ok(gd) => gd,
                 Err(e) => {
-                    pb.println(format!("error {:?} when parsing game {:?}", e, path));
+                    pb.println(format!("Error {:?} when parsing game {:?}", e, path));
                     pb.inc(1);
                     continue;
                 }
@@ -244,7 +244,7 @@ impl PlayerData {
             let result = match GameData::parse_game(gamedata_with_frames, np_code.to_string()) {
                 Ok(g) => g,
                 Err(e) => {
-                    pb.println(format!("Error when parsing game result: {:?}", e));
+                    pb.println(format!("Error {:?}, when parsing game: {:?}", e, path));
                     pb.inc(1);
                     continue;
                 }
