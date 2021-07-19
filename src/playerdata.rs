@@ -31,7 +31,7 @@ enum DataType {
 
 #[derive(Debug)]
 struct FavBestData {
-    favorite: usize, //(wins, total games)
+    favorite: usize,
     best: usize,
 }
 

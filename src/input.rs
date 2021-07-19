@@ -84,15 +84,9 @@ fn change_cache() {
             return;
         }
     }
-    /* let cl_new = input_data();
-    main_loop(PlayerData::parse_dir(
-        cl_new.path,
-        format!("{}", cl_new.np_code),
-    )); */
 }
 
 fn player(data: &PlayerData) {
-    //not sure how i want to do this with the new framework
     command_loop!(
         true,
         "winrate", text::P_WINRATE_HELP_TEXT => data.winrate(Player::Player),
