@@ -9,6 +9,7 @@ use std::str::FromStr;
 use crate::playerdata::PlayerData;
 
 use crate::character::Character;
+use crate::player::Player;
 use crate::stage::Stage;
 use serde::{Deserialize, Serialize};
 
@@ -94,10 +95,10 @@ fn player(data: &PlayerData) {
     //not sure how i want to do this with the new framework
     command_loop!(
         true,
-        //"winrate", text::P_WINRATE_HELP_TEXT => data.winrate(&ArgType::Player),
+        "winrate", text::P_WINRATE_HELP_TEXT => data.winrate(Player::Player),
         //"characters", text::PLACEHOLDER_TEXT => data.characters(), not sure how i want to implement these right now
         //"stages", text::PLACEHOLDER_TEXT => data.stages(),
-        //"matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(&ArgType::Player),
+        "matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(Player::Player),
         "overview", text::P_OVERVIEW_HELP_TEXT => data.overview()
     );
 }

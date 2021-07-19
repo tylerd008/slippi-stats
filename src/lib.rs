@@ -2,6 +2,7 @@ mod character;
 mod gamedata;
 pub mod input;
 mod parsable_enum;
+mod player;
 mod playerdata;
 mod stage;
 mod text;
