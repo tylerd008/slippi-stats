@@ -9,6 +9,8 @@ pub const CHANGECACHE_HELP_TEXT: &str =
 pub const END_HELP_TEXT: &str = "Ends the program.";
 
 pub const P_WINRATE_HELP_TEXT: &str = "Player's overall winrate.";
+pub const P_CHARACTERS_HELP_TEXT: &str = "Player's winrate with each character they've used.";
+pub const P_STAGES_HELP_TEXT: &str = "Player's winrate on each stage they've played on.";
 pub const P_OVERVIEW_HELP_TEXT: &str = "Gives and overview of the player's stats with best and favorite character, stage, and opponent.";
 pub const P_MATCHUPS_HELP_TEXT: &str = "Gives player's winrate against each character.";
 

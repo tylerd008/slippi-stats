@@ -285,26 +285,26 @@ impl PlayerData {
         println!("{}:\n{}", arg, matchup_data);
     }
 
-    pub fn stages(&self, character: Character) {
+    pub fn stages<T: GameDataCondition + Display>(&self, arg: T) {
         let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if character.game_data_condition(game) {
+            if arg.game_data_condition(game) {
                 stage_data.add_game(game.is_victory(), game.stage);
             }
         }
-        println!("As {}:\n{}", character, stage_data);
+        println!("{}:\n{}", arg, stage_data);
     }
 
-    pub fn characters(&self, stage: Stage) {
+    pub fn characters<T: GameDataCondition + Display>(&self, arg: T) {
         let mut char_data = WinLossVec::<Character>::new();
 
         for game in &self.results {
-            if stage.game_data_condition(game) {
+            if arg.game_data_condition(game) {
                 char_data.add_game(game.is_victory(), game.player_char);
             }
         }
-        println!("On {}:\n{}", stage, char_data);
+        println!("{}:\n{}", arg, char_data);
     }
 
     pub fn matchup(&self, player: Character, opponent: Character) {

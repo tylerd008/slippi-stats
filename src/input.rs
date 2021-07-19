@@ -96,8 +96,8 @@ fn player(data: &PlayerData) {
     command_loop!(
         true,
         "winrate", text::P_WINRATE_HELP_TEXT => data.winrate(Player::Player),
-        //"characters", text::PLACEHOLDER_TEXT => data.characters(), not sure how i want to implement these right now
-        //"stages", text::PLACEHOLDER_TEXT => data.stages(),
+        "characters", text::P_CHARACTERS_HELP_TEXT => data.characters(Player::Player),
+        "stages", text::P_STAGES_HELP_TEXT => data.stages(Player::Player),
         "matchups", text::P_MATCHUPS_HELP_TEXT => data.matchups(Player::Player),
         "overview", text::P_OVERVIEW_HELP_TEXT => data.overview()
     );
