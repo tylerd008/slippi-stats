@@ -274,11 +274,8 @@ impl PlayerData {
         println!("{}:\n{}", arg, win_loss_data);
     }
 
-    pub fn matchups<T: GameDataCondition + Parsable + Numbered>(&self, arg: T)
-    where
-        AssociatedTryFromError<T>: std::fmt::Debug,
-    {
-        let mut matchup_data = WinLossVec::<T>::new();
+    pub fn matchups<T: GameDataCondition + Display>(&self, arg: T) {
+        let mut matchup_data = WinLossVec::<Character>::new();
 
         for game in &self.results {
             if arg.game_data_condition(game) {
