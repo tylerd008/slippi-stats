@@ -39,6 +39,6 @@ impl Numbered for Character {
 
 impl GameDataCondition for Character {
     fn game_data_condition(&self, game: &GameData) -> bool {
-        game.player_char == *self as usize
+        game.player_char == *self
     }
 }

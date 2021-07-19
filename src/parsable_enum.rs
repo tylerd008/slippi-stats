@@ -24,7 +24,8 @@ macro_rules! parsable_enum {
         $($disp_name:literal; $($alias:literal,)* => $val:ident = $num_val:expr,)*
     }) => {
         use crate::parsable_enum::ParsableEnumError;
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        use serde::{Deserialize, Serialize};
+        #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
         $vis enum $name {
             $($val = $num_val,)*
         }

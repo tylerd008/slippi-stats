@@ -92,6 +92,7 @@ where
     }
 
     fn add_game(&mut self, is_win: bool, elt_num: usize) {
+        //todo: figure out a way to use a generic into usize with this so every call doesn't involve `as usize`
         self.data[elt_num].add_game(is_win)
     }
 
@@ -164,7 +165,7 @@ where
 }
 
 impl PlayerData {
-    const CACHE_VER: usize = 7;
+    const CACHE_VER: usize = 8;
     pub fn new() -> Self {
         Self {
             results: Vec::new(),
@@ -279,7 +280,7 @@ impl PlayerData {
 
         for game in &self.results {
             if arg.game_data_condition(game) {
-                matchup_data.add_game(game.is_victory(), game.opponent_char);
+                matchup_data.add_game(game.is_victory(), game.opponent_char as usize);
             }
         }
         println!("{}:\n{}", arg, matchup_data);
@@ -290,7 +291,7 @@ impl PlayerData {
 
         for game in &self.results {
             if arg.game_data_condition(game) {
-                stage_data.add_game(game.is_victory(), game.stage);
+                stage_data.add_game(game.is_victory(), game.stage as usize);
             }
         }
         println!("{}:\n{}", arg, stage_data);
@@ -301,7 +302,7 @@ impl PlayerData {
 
         for game in &self.results {
             if arg.game_data_condition(game) {
-                char_data.add_game(game.is_victory(), game.player_char);
+                char_data.add_game(game.is_victory(), game.player_char as usize);
             }
         }
         println!("{}:\n{}", arg, char_data);
@@ -311,8 +312,8 @@ impl PlayerData {
         let mut stage_data = WinLossVec::<Stage>::new();
 
         for game in &self.results {
-            if game.player_char == player as usize && game.opponent_char == opponent as usize {
-                stage_data.add_game(game.is_victory(), game.stage);
+            if game.player_char == player && game.opponent_char == opponent {
+                stage_data.add_game(game.is_victory(), game.stage as usize);
             }
         }
         println!("{} vs. {}:\n{}", player, opponent, stage_data);
@@ -332,9 +333,9 @@ impl PlayerData {
         let mut opponent_data = WinLossVec::<Character>::new();
         let mut stage_data = WinLossVec::<Stage>::new();
         for game in &self.results {
-            char_data.add_game(game.is_victory(), game.player_char);
-            opponent_data.add_game(game.is_victory(), game.opponent_char);
-            stage_data.add_game(game.is_victory(), game.stage);
+            char_data.add_game(game.is_victory(), game.player_char as usize);
+            opponent_data.add_game(game.is_victory(), game.opponent_char as usize);
+            stage_data.add_game(game.is_victory(), game.stage as usize);
         }
 
         char_data.print_fb_data(DataType::Characters, char_data.fav_best());

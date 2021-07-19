@@ -8,13 +8,18 @@ use peppi::parse;
 use peppi::ParseError;
 use std::path::PathBuf;
 
+use crate::character::Character;
+use crate::stage::Stage;
+
+use std::convert::TryFrom;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameData {
-    pub player_char: usize,
-    pub opponent_char: usize,
-    pub stage: usize,
+    pub player_char: Character,
+    pub opponent_char: Character,
+    pub stage: Stage,
     pub match_result: MatchResult,
     pub timestamp: DateTime<Utc>,
 }
@@ -63,11 +68,13 @@ impl GameData {
 
         let timestamp = game.metadata.date.unwrap();
 
-        let stage = game.start.stage.0 as usize;
+        let stage_num = game.start.stage.0 as usize;
 
-        if stage == 0 || stage == 1 || stage == 21 || stage > 32 {
-            return Err(GameParseError::CorruptedStageData(stage));
+        if stage_num == 0 || stage_num == 1 || stage_num == 21 || stage_num > 32 {
+            return Err(GameParseError::CorruptedStageData(stage_num));
         }
+
+        let stage = Stage::try_from(stage_num).unwrap();
 
         Ok(Self {
             player_char,
@@ -171,7 +178,7 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
     }
 }
 
-fn get_char(game: &Game, player: usize) -> Result<usize, GameParseError> {
+fn get_char(game: &Game, player: usize) -> Result<Character, GameParseError> {
     let char_num = match game.start.players.get(player) {
         Some(character) => character,
         None => {
@@ -184,7 +191,7 @@ fn get_char(game: &Game, player: usize) -> Result<usize, GameParseError> {
     if char_num >= 26 {
         return Err(GameParseError::CorruptedCharData(char_num));
     }
-    Ok(char_num)
+    Ok(Character::try_from(char_num).unwrap())
 }
 
 fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GameParseError> {
@@ -200,10 +207,7 @@ impl fmt::Display for GameData {
         write!(
             f,
             "{} vs {} on {}. {}",
-            num_to_char(self.player_char),
-            num_to_char(self.opponent_char),
-            num_to_stage(self.stage),
-            self.match_result
+            self.player_char, self.opponent_char, self.stage, self.match_result
         )
     }
 }
@@ -227,77 +231,5 @@ impl fmt::Display for MatchEndType {
             MatchEndType::Stocks => write!(f, "stocks"),
             MatchEndType::Timeout => write!(f, "timeout"),
         }
-    }
-}
-
-fn num_to_char(char_num: usize) -> String {
-    match char_num {
-        0 => String::from("Captain Falcon"),
-        1 => String::from("Donkey Kong"),
-        2 => String::from("Fox"),
-        3 => String::from("Mr. Game and Watch"),
-        4 => String::from("Kirby"),
-        5 => String::from("Bowser"),
-        6 => String::from("Link"),
-        7 => String::from("Luigi"),
-        8 => String::from("Mario"),
-        9 => String::from("Marth"),
-        10 => String::from("Mewtwo"),
-        11 => String::from("Ness"),
-        12 => String::from("Peach"),
-        13 => String::from("Pikachu"),
-        14 => String::from("Ice Climbers"),
-        15 => String::from("Jigglypuff"),
-        16 => String::from("Samus"),
-        17 => String::from("Yoshi"),
-        18 => String::from("Zelda"),
-        19 => String::from("Sheik"),
-        20 => String::from("Falco"),
-        21 => String::from("Young Link"),
-        22 => String::from("Dr. Mario"),
-        23 => String::from("Roy"),
-        24 => String::from("Pichu"),
-        25 => String::from("Ganondorf"),
-        _ => unreachable!(), //any other value is errored out before this fn is ever called
-    }
-}
-
-fn num_to_stage(stage_num: usize) -> String {
-    match stage_num {
-        //dummy results are so the function for printing data doesn't freak out
-        0 => String::from("dummy"),
-        1 => String::from("dummy"),
-        2 => String::from("Fountain of Dreams"),
-        3 => String::from("Pokémon Stadium"),
-        4 => String::from("Princess Peach's Castle"),
-        5 => String::from("Kongo Jungle"),
-        6 => String::from("Brinstar"),
-        7 => String::from("Corneria"),
-        8 => String::from("Yoshi's Story"),
-        9 => String::from("Onett"),
-        10 => String::from("Mute City"),
-        11 => String::from("Rainbow Cruise"),
-        12 => String::from("Jungle Japes"),
-        13 => String::from("Great Bay"),
-        14 => String::from("Hyrule Temple"),
-        15 => String::from("Brinstar Depths"),
-        16 => String::from("Yoshi's Island"),
-        17 => String::from("Green Greens"),
-        18 => String::from("Fourside"),
-        19 => String::from("Mushroom Kingdom I"),
-        20 => String::from("Mushroom Kingdom II"),
-        21 => String::from("dummy"),
-        22 => String::from("Venom"),
-        23 => String::from("Poké Floats"),
-        24 => String::from("Big Blue"),
-        25 => String::from("Icicle Mountain"),
-        26 => String::from("Icetop"), //?
-        27 => String::from("Flat Zone"),
-        28 => String::from("Dream Land N64"),
-        29 => String::from("Yoshi's Island N64"),
-        30 => String::from("Kongo Jungle N64"),
-        31 => String::from("Battlefield"),
-        32 => String::from("Final Destination"),
-        _ => unreachable!(), //any other value is errored out before this fn is ever called
     }
 }
