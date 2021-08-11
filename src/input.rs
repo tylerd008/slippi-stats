@@ -157,9 +157,6 @@ impl fmt::Display for NetplayCode {
 impl FromStr for NetplayCode {
     type Err = NetplayCodeParseError;
     fn from_str(np_str: &str) -> Result<Self, Self::Err> {
-        if !np_str.contains("#") || np_str.len() != 8 {
-            return Err(NetplayCodeParseError::InvalidCode);
-        }
         let v: Vec<&str> = np_str.split_terminator("#").collect();
         let num: usize = match v[1].parse() {
             Ok(n) => n,
