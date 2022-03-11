@@ -50,6 +50,9 @@ pub enum MatchEndType {
 
 impl GameData {
     pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
+        if game.metadata.players.as_ref().unwrap().len() > 2 {
+            return Err(GameParseError::IncorrectPlayerCount);
+        }
         let player_num = match get_player_num(&game, np_code) {
             Some(num) => num,
             None => {
