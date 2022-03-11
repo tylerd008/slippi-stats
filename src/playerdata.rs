@@ -218,21 +218,6 @@ impl PlayerData {
                 pb.inc(1);
                 continue;
             }
-
-            match GameData::has_player(&game_data, np_code.to_string()) {
-                Ok(has_player) => {
-                    if !has_player {
-                        pb.println(format!("Game does not contain player. Skipping."));
-                        pb.inc(1);
-                        continue;
-                    }
-                }
-                Err(e) => {
-                    pb.println(format!("Error {:?}, when parsing game: {:?}", e, path));
-                    pb.inc(1);
-                    continue;
-                }
-            }
             let gamedata_with_frames = match GameData::get_game_data(&path, false) {
                 Ok(gd) => gd,
                 Err(e) => {

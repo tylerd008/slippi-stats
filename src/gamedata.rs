@@ -39,6 +39,7 @@ pub enum GameParseError {
     CorruptedPlayerData,
     EmptyCharData,
     IncorrectPlayerCount,
+    GameDoesNotContainPlayer,
     PeppiError(ParseError),
 }
 
@@ -52,6 +53,9 @@ impl GameData {
     pub fn parse_game(game: Game, np_code: String) -> Result<Self, GameParseError> {
         if game.metadata.players.as_ref().unwrap().len() > 2 {
             return Err(GameParseError::IncorrectPlayerCount);
+        }
+        if !has_player(&game, &np_code)? {
+            return Err(GameParseError::GameDoesNotContainPlayer);
         }
         let player_num = match get_player_num(&game, np_code) {
             Some(num) => num,
@@ -100,14 +104,6 @@ impl GameData {
         }
     }
 
-    pub fn has_player(game: &Game, np_code: String) -> Result<bool, GameParseError> {
-        let players = game.metadata.players.as_ref().unwrap();
-        let p1_np_code = get_np_code(&players, 0)?;
-        let p2_np_code = get_np_code(&players, 1)?;
-
-        Ok(p1_np_code == np_code || p2_np_code == np_code)
-    }
-
     pub fn is_victory(&self) -> bool {
         match self.match_result {
             MatchResult::Victory(_) => true,
@@ -115,6 +111,15 @@ impl GameData {
         }
     }
 }
+
+fn has_player(game: &Game, np_code: &String) -> Result<bool, GameParseError> {
+    let players = game.metadata.players.as_ref().unwrap();
+    let p1_np_code = get_np_code(&players, 0)?;
+    let p2_np_code = get_np_code(&players, 1)?;
+
+    Ok(p1_np_code == np_code || p2_np_code == np_code)
+}
+
 fn get_player_num(game: &Game, np_code: String) -> Option<usize> {
     let players = game.metadata.players.as_ref().unwrap();
     let p2_md = players.get(1).unwrap();
