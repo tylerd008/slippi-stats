@@ -204,7 +204,7 @@ impl PlayerData {
             if path.extension().unwrap() != "slp" {
                 continue;
             }
-            let game_data = match GameData::get_game_data(&path, true) {
+            let game_metadata = match GameData::get_game_data(&path, true) {
                 Ok(gd) => gd,
                 Err(e) => {
                     pb.println(format!("Error {:?} when parsing game {:?}", e, path));
@@ -212,7 +212,7 @@ impl PlayerData {
                     continue;
                 }
             };
-            let dt = serde_json::to_string(&game_data.metadata.date.unwrap()).unwrap();
+            let dt = serde_json::to_string(&game_metadata.metadata.date.unwrap()).unwrap();
             if cache.contains(&dt) {
                 //not sure what's better: this, or loading the deserialized data and then iterating through it and checking each gamedata
                 pb.inc(1);
