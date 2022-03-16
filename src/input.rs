@@ -33,7 +33,10 @@ pub fn load_data() -> PlayerData {
     let cl = match fs::read_to_string("data.cache") {
         Ok(c) => {
             println!("Cache found, loading...");
-            serde_json::from_str(&c).unwrap()
+            match serde_json::from_str(&c) {
+                Ok(d) => d,
+                Err(_) => input_data(),
+            }
         }
         Err(_) => input_data(),
     };
