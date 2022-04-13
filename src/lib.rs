@@ -31,6 +31,6 @@ mod tests {
     #[test]
     fn stage_parse_from_usize_nonexistent_stage() {
         let stage_from_usize = Stage::try_from(0);
-        assert_eq!(Err(()), stage_from_usize);
+        assert!(stage_from_usize.is_err());
     }
 }
