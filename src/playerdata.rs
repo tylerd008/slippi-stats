@@ -305,11 +305,11 @@ impl PlayerData {
     }
 
     pub fn last(&self, num_games: usize) {
-        let mut i = self.results.len() - num_games;
+        let i = self.results.len() - num_games;
         let end = self.results.len();
-        while i < end {
-            println!("{}", self.results[i]);
-            i += 1;
+
+        for j in i..end {
+            println!("{}", self.results[j])
         }
     }
 
