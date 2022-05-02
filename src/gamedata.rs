@@ -1,4 +1,5 @@
 use peppi::game::{Frames, Game, Port};
+use std::cmp::Ordering;
 use std::fmt;
 use std::fs::File;
 
@@ -6,7 +7,7 @@ use chrono::{DateTime, Utc};
 use peppi::metadata::Player as PlayerMD;
 use peppi::parse;
 use peppi::ParseError;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::character::Character;
 use crate::stage::Stage;
@@ -92,27 +93,22 @@ impl GameData {
         })
     }
 
-    pub fn get_game_data(path: &PathBuf, skip_frames: bool) -> Result<Game, GameParseError> {
+    pub fn get_game_data(path: &Path, skip_frames: bool) -> Result<Game, GameParseError> {
         match peppi::game(
             &mut File::open(&path).unwrap(),
             Some(parse::Opts { skip_frames }),
         ) {
             Ok(val) => Ok(val),
-            Err(e) => {
-                return Err(GameParseError::PeppiError(e));
-            }
+            Err(e) => Err(GameParseError::PeppiError(e)),
         }
     }
 
     pub fn is_victory(&self) -> bool {
-        match self.match_result {
-            MatchResult::Victory(_) => true,
-            _ => false,
-        }
+        matches!(self.match_result, MatchResult::Victory(_))
     }
 }
 
-fn has_player(game: &Game, np_code: &String) -> Result<bool, GameParseError> {
+fn has_player(game: &Game, np_code: &str) -> Result<bool, GameParseError> {
     let players = game.metadata.players.as_ref().unwrap();
     let p1_np_code = get_np_code(&players, 0)?;
     let p2_np_code = get_np_code(&players, 1)?;
@@ -171,19 +167,20 @@ fn get_match_result(game: &Game, player_num: usize) -> Result<MatchResult, GameP
         }
     }
 
-    if p_end_stocks > o_end_stocks {
-        Ok(MatchResult::Victory(MatchEndType::Stocks))
-    } else if p_end_stocks < o_end_stocks {
-        Ok(MatchResult::Loss(MatchEndType::Stocks))
-    } else {
-        if pp_lf.leader.post.damage < op_lf.leader.post.damage {
-            Ok(MatchResult::Victory(MatchEndType::Timeout))
-        } else if pp_lf.leader.post.damage > op_lf.leader.post.damage {
-            Ok(MatchResult::Loss(MatchEndType::Timeout))
-        } else {
-            Ok(MatchResult::Tie)
+    let result = match p_end_stocks.cmp(&o_end_stocks) {
+        Ordering::Greater => MatchResult::Victory(MatchEndType::Stocks),
+        Ordering::Less => MatchResult::Loss(MatchEndType::Stocks),
+        Ordering::Equal => {
+            if pp_lf.leader.post.damage < op_lf.leader.post.damage {
+                MatchResult::Victory(MatchEndType::Timeout)
+            } else if pp_lf.leader.post.damage > op_lf.leader.post.damage {
+                MatchResult::Loss(MatchEndType::Timeout)
+            } else {
+                MatchResult::Tie
+            }
         }
-    }
+    };
+    Ok(result)
 }
 
 fn get_char(game: &Game, player: usize) -> Result<Character, GameParseError> {
@@ -202,7 +199,7 @@ fn get_char(game: &Game, player: usize) -> Result<Character, GameParseError> {
     Ok(Character::try_from(char_num).unwrap())
 }
 
-fn get_np_code(players: &Vec<PlayerMD>, p_number: usize) -> Result<&str, GameParseError> {
+fn get_np_code(players: &[PlayerMD], p_number: usize) -> Result<&str, GameParseError> {
     let p_md = players.get(p_number).unwrap();
     match &p_md.netplay {
         Some(c) => Ok(&c.code),

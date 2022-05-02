@@ -2,6 +2,7 @@ use std::fmt;
 use std::fs;
 use std::time::Instant;
 
+use std::path::Path;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
@@ -329,6 +330,12 @@ impl PlayerData {
     }
 }
 
+impl Default for PlayerData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -339,7 +346,7 @@ impl fmt::Display for DataType {
     }
 }
 
-fn count_replays(path: &PathBuf) -> u64 {
+fn count_replays(path: &Path) -> u64 {
     let mut count = 0;
     for entry in fs::read_dir(path).unwrap() {
         let path = entry.unwrap().path();

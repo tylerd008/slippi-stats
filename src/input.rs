@@ -73,7 +73,7 @@ pub fn main_loop(results: PlayerData) -> bool {
             break;
         }
     );
-    return true;
+    true
 }
 
 fn change_cache() {
@@ -84,7 +84,6 @@ fn change_cache() {
                 "Couldn't delete previous cache location data due to error `{:?}`",
                 e
             );
-            return;
         }
     }
 }
@@ -160,10 +159,10 @@ impl fmt::Display for NetplayCode {
 impl FromStr for NetplayCode {
     type Err = NetplayCodeParseError;
     fn from_str(np_str: &str) -> Result<Self, Self::Err> {
-        if !np_str.contains("#") {
+        if !np_str.contains('#') {
             return Err(NetplayCodeParseError::InvalidCode);
         }
-        let v: Vec<&str> = np_str.split_terminator("#").collect();
+        let v: Vec<&str> = np_str.split_terminator('#').collect();
         let num: usize = match v[1].parse() {
             Ok(n) => n,
             Err(_) => {
